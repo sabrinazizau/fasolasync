@@ -38,6 +38,7 @@ dependencies:
   http: ^1.1.0
   firebase_core: ^2.23.0
   firebase_auth: ^4.14.1
+  flutter_svg: ^2.0.9
 
 dev_dependencies:
   flutter_test:
@@ -78,6 +79,7 @@ flutter:
   - assets/indie5.jpg
   - assets/indie6.jpg
   - assets/indie7.jpg
+  - assets/undraw_engineering_team_a7n2.svg
 
   
 

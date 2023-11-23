@@ -4,6 +4,7 @@ import 'package:tugas5/screens/library.dart';
 import 'package:tugas5/services/album_operations.dart';
 import '/screens/home.dart';
 import '/screens/login_page.dart';
+import 'package:tugas5/screens/register_page.dart';
 
 class NavBarDemo extends StatefulWidget {
   final User? user; // User bisa null jika belum login
@@ -35,6 +36,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(14.0),
+                    child: Text('Menu'),
                   ),
                   ListTile(
                     leading: Icon(Icons.home),
@@ -119,7 +121,8 @@ class _NavBarDemoState extends State<NavBarDemo> {
         ),
         TextButton(
           onPressed: () {
-            // Handle Sign Up action
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (context) => RegisterPage()));
           },
           child: Text(
             'Sign Up',
