@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "698775586986",
+    "project_id": "fasolasync",
+    "storage_bucket": "fasolasync.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:698775586986:android:0950ee489063ad0d70e8d3",
+        "android_client_info": {
+          "package_name": "com.example.tugas5"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD_cua89cLe2AN914-co7MSo-Z7bzvjCJ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
