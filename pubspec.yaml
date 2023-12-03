@@ -39,6 +39,11 @@ dependencies:
   firebase_core: ^2.23.0
   firebase_auth: ^4.14.1
   flutter_svg: ^2.0.9
+  cloud_firestore: ^4.13.2
+  page_transition: ^2.1.0
+  animated_splash_screen: ^1.3.0
+  google_fonts: ^6.1.0
+  file_picker: ^6.1.1
 
 dev_dependencies:
   flutter_test:
@@ -80,6 +85,7 @@ flutter:
   - assets/indie6.jpg
   - assets/indie7.jpg
   - assets/undraw_engineering_team_a7n2.svg
+  - assets/fasolasync.png
 
   
 

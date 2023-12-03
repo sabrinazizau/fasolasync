@@ -1,9 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:tugas5/firebase_options.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:animated_splash_screen/animated_splash_screen.dart';
+import 'package:page_transition/page_transition.dart';
+import 'package:tugas5/screens/playlist_detail.dart';
+import 'package:tugas5/screens/playlist_form_add.dart';
+import 'package:tugas5/screens/register_page.dart';
 import '/screens/nav_bar.dart';
 import '/screens/home.dart';
+import 'firebase_options.dart';
+import 'screens/login_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,28 +33,51 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.indigo,
       ),
-      home: StreamBuilder(
+      home: SplashScreen(), // Menggunakan SplashScreen sebagai halaman awal
+      routes: {
+        'home': (context) => const MusicPlayerScreen(),
+        'login_page': (context) => const LoginPage(),
+        'register_page': (context) => const RegisterPage(),
+        'playlist_form_add': (context) => const PlaylistFormAdd(),
+        'playlist_detail': (context) => const PlaylistDetail(),
+      },
+    );
+  }
+}
+
+class SplashScreen extends StatelessWidget {
+  const SplashScreen({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSplashScreen(
+      splash: Center(
+        child: Image.asset(
+          'assets/fasolasync.png',
+          width: 4800,
+          height: 4800,
+          fit: BoxFit.contain,
+        ),
+      ),
+      backgroundColor: Colors.white,
+      nextScreen: StreamBuilder(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.active) {
             User? user = snapshot.data as User?;
             if (user != null) {
-              return Material(
-                child: NavBarDemo(user: user),
-              );
+              return NavBarDemo(user: user);
             } else {
-              return Material(
-                child: NavBarDemo(user: null),
-              );
+              return NavBarDemo(user: null);
             }
           } else {
             return CircularProgressIndicator();
           }
         },
       ),
-      routes: {
-        'home': (context) => const MusicPlayerScreen(),
-      },
+      splashTransition: SplashTransition.scaleTransition,
+      pageTransitionType: PageTransitionType.fade,
+      duration: 2000,
     );
   }
 }

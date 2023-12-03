@@ -1,5 +1,6 @@
 // ignore_for_file: prefer_interpolation_to_compose_strings, non_constant_identifier_names
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class DataService {
@@ -1170,6 +1171,40 @@ class DataService {
     } catch (e) {
       // Print error here
       return '[]';
+    }
+  }
+
+  Future upload(
+      String token, String project, List<int> file, String ext) async {
+    try {
+      String uri = 'https://io.etter.cloud/v4/upload';
+
+      var request = http.MultipartRequest('POST', Uri.parse(uri));
+
+      request.fields['token'] = token;
+      request.fields['project'] = project;
+
+      request.files.add(http.MultipartFile.fromBytes('file', file,
+          filename: 'filename.' + ext));
+
+      var response = await request.send();
+      if (kDebugMode) {
+        print(response);
+      }
+
+      if (response.statusCode == 200) {
+        final res = await http.Response.fromStream(response);
+
+        if (kDebugMode) {
+          print(res.body);
+        }
+
+        return res.body;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      return [];
     }
   }
 }

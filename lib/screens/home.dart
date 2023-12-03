@@ -1,7 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import '../services/album_operations.dart';
-import '/screens/library.dart';
+import '../services/playlist_operations.dart';
+// import '/screens/library.dart';
 
 class MusicPlayerScreen extends StatefulWidget {
   const MusicPlayerScreen({Key? key}) : super(key: key);
@@ -57,7 +56,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
       case 0:
         return HomeContent();
       case 1:
-        return ProfileScreen();
+      // return ProfileScreen();
       default:
         return Container();
     }

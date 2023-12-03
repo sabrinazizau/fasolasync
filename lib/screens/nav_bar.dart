@@ -1,7 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:tugas5/screens/library.dart';
-import 'package:tugas5/services/album_operations.dart';
+import 'package:tugas5/services/playlist_operations.dart';
+import '../utils/rounded_button.dart';
 import '/screens/home.dart';
 import '/screens/login_page.dart';
 import 'package:tugas5/screens/register_page.dart';
@@ -53,14 +54,20 @@ class _NavBarDemoState extends State<NavBarDemo> {
                   ListTile(
                     leading: Icon(Icons.library_music),
                     title: Text('Library'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => ProfileScreen()),
-                      );
-                    },
+                    // onTap: () {
+                    //   Navigator.push(
+                    //     context,
+                    //     MaterialPageRoute(
+                    //         builder: (context) => ProfileScreen()),
+                    //   );
+                    // },
                   ),
+                  RoundedButton(
+                      colour: Colors.greenAccent,
+                      title: 'Add Playlist',
+                      onPressed: () {
+                        Navigator.pushNamed(context, 'playlist_form_add');
+                      }),
                   Padding(
                     padding: const EdgeInsets.all(14.0),
                     child: Text("Settings"),
@@ -122,7 +129,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
         TextButton(
           onPressed: () {
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => RegisterPage()));
+                MaterialPageRoute(builder: (context) => RegisterPage()));
           },
           child: Text(
             'Sign Up',
