@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
+import 'package:flutter_svg/flutter_svg.dart';
+
 import '/utils/fire_auth.dart';
 import '/utils/validator.dart';
 
@@ -55,6 +57,10 @@ class _LoginPageState extends State<LoginPage> {
       },
       child: Scaffold(
         appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
           title: const Text('FaSoLaSync'),
         ),
         body: FutureBuilder(
@@ -66,13 +72,16 @@ class _LoginPageState extends State<LoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 24.0, right: 24.0),
-                      child: Text(
-                        'Login',
-                        // ignore: deprecated_member_use
-                        style: Theme.of(context).textTheme.headline1,
-                      ),
+                    const SizedBox(height: 50.0),
+                    Text(
+                      'Start listening with a FaSoLaSync account.',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
+                    const SizedBox(height: 50.0),
+                    SvgPicture.asset(
+                      'assets/undraw_music_re_a2jk.svg',
+                      height: 200,
                     ),
                     Form(
                       key: _formKey,

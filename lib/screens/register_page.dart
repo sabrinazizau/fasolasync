@@ -28,7 +28,7 @@ class RegisterPageState extends State<RegisterPage> {
   bool isProcessing = false;
 
   @override
-  Widget build(BuildContext context){
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         focusUsername.unfocus();
@@ -36,97 +36,103 @@ class RegisterPageState extends State<RegisterPage> {
         focusPassword.unfocus();
       },
       child: Scaffold(
-        appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            title: const Text('Register'),
           ),
-          title: const Text('Register'),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SvgPicture.asset(
-                  'assets/undraw_engineering_team_a7n2.svg',
-                  height: 200,
-                ),
-                Form(
-                  key: registerFormKey,
-                  child: Column(
-                    children: <Widget>[
-                      TextFormField(
-                        controller: usernameTextController,
-                        focusNode: focusUsername,
-                        validator: (value) => Validator.validateName(
-                          name: value,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "Username",
-                          errorBorder: UnderlineInputBorder(
-                            borderRadius: BorderRadius.circular(6.0),
-                            borderSide: const BorderSide(
-                              color: Colors.indigo,
+          body: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 10.0),
+                  Text(
+                    'Sign up to start listening.',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  ),
+                  const SizedBox(height: 10.0),
+                  SvgPicture.asset(
+                    'assets/undraw_music_re_a2jk.svg',
+                    height: 200,
+                  ),
+                  Form(
+                      key: registerFormKey,
+                      child: Column(
+                        children: <Widget>[
+                          TextFormField(
+                            controller: usernameTextController,
+                            focusNode: focusUsername,
+                            validator: (value) => Validator.validateName(
+                              name: value,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: "Username",
+                              errorBorder: UnderlineInputBorder(
+                                borderRadius: BorderRadius.circular(6.0),
+                                borderSide: const BorderSide(
+                                  color: Colors.indigo,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height:16.0),
-                      TextFormField(
-                        controller: emailTextController,
-                        focusNode: focusEmail,
-                        validator: (value) => Validator.validateEmail(
-                          email: value,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "Email",
-                          errorBorder:  UnderlineInputBorder(
-                            borderRadius: BorderRadius.circular(6.0),
-                            borderSide: const BorderSide(
-                              color: Colors.indigo,
+                          const SizedBox(height: 16.0),
+                          TextFormField(
+                            controller: emailTextController,
+                            focusNode: focusEmail,
+                            validator: (value) => Validator.validateEmail(
+                              email: value,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: "Email",
+                              errorBorder: UnderlineInputBorder(
+                                borderRadius: BorderRadius.circular(6.0),
+                                borderSide: const BorderSide(
+                                  color: Colors.indigo,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height:16.0),
-                      TextFormField(
-                        controller: passwordTextController,
-                        focusNode: focusPassword,
-                        obscureText: true,
-                        validator: (value) => Validator.validatePassword(
-                          password: value,
-                        ),
-                        decoration: InputDecoration(
-                          hintText: "Password",
-                          errorBorder:  UnderlineInputBorder(
-                            borderRadius: BorderRadius.circular(6.0),
-                            borderSide: const BorderSide(
-                              color: Colors.indigo,
+                          const SizedBox(height: 16.0),
+                          TextFormField(
+                            controller: passwordTextController,
+                            focusNode: focusPassword,
+                            obscureText: true,
+                            validator: (value) => Validator.validatePassword(
+                              password: value,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: "Password",
+                              errorBorder: UnderlineInputBorder(
+                                borderRadius: BorderRadius.circular(6.0),
+                                borderSide: const BorderSide(
+                                  color: Colors.indigo,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height:32.0),
-                      isProcessing
-                          ? const CircularProgressIndicator()
-                          : Row(
-                              children: [
-                                Expanded(
-                                  child: ElevatedButton(
-                                    onPressed: () async {
-                                      setState(() {
-                                        isProcessing = true;
-                                      });
+                          const SizedBox(height: 32.0),
+                          isProcessing
+                              ? const CircularProgressIndicator()
+                              : Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          setState(() {
+                                            isProcessing = true;
+                                          });
 
-                                      if (registerFormKey.currentState!
-                                          .validate()) {
-                                        User? user = await FireAuth
-                                            .registerUsingEmailPassword(
-                                              name: usernameTextController.text, 
-                                              email: emailTextController.text, 
-                                              password: 
+                                          if (registerFormKey.currentState!
+                                              .validate()) {
+                                            User? user = await FireAuth
+                                                .registerUsingEmailPassword(
+                                              name: usernameTextController.text,
+                                              email: emailTextController.text,
+                                              password:
                                                   passwordTextController.text,
                                             );
 
@@ -145,22 +151,21 @@ class RegisterPageState extends State<RegisterPage> {
                                               );
                                             }
                                           }
-                                    },
-                                    child: const Text(
-                                      'Sign Up',
-                                      style: TextStyle(color: Colors.white),
+                                        },
+                                        child: const Text(
+                                          'Sign Up',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
                                     ),
-                                  ), 
-                                ),
-                              ],
-                          )
-                    ],
-                  ))
-              ],
+                                  ],
+                                )
+                        ],
+                      ))
+                ],
+              ),
             ),
-          ),
-        )
-      ),
+          )),
     );
   }
 }

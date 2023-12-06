@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 
 class DataService {
   Future insertPlaylist(String appid, String playlist_name,
-      String playlist_image, String playlist_desc) async {
+      String playlist_image, String playlist_desc, String song_id) async {
     String uri = 'https://io.etter.cloud/v4/insert';
 
     try {
@@ -16,7 +16,8 @@ class DataService {
         'appid': appid,
         'playlist_name': playlist_name,
         'playlist_image': playlist_image,
-        'playlist_desc': playlist_desc
+        'playlist_desc': playlist_desc,
+        'song_id': song_id
       });
 
       if (response.statusCode == 200) {

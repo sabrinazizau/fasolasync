@@ -18,6 +18,7 @@ class _PlaylistFormAddState extends State<PlaylistFormAdd> {
   final playlist_name = TextEditingController();
   final playlist_desc = TextEditingController();
   final gambar_aset = TextEditingController();
+  final song_id = TextEditingController();
 
   DataService ds = DataService();
 
@@ -65,8 +66,8 @@ class _PlaylistFormAddState extends State<PlaylistFormAdd> {
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightGreen, elevation: 0),
                   onPressed: () async {
-                    List response = jsonDecode(await ds.insertPlaylist(
-                        appid, playlist_name.text, playlist_desc.text, "-"));
+                    List response = jsonDecode(await ds.insertPlaylist(appid,
+                        playlist_name.text, "-", playlist_desc.text, "-"));
 
                     List<PlaylistModel> Playlist =
                         response.map((e) => PlaylistModel.fromJson(e)).toList();
