@@ -1,14 +1,19 @@
-//
-//
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '/utils/fire_auth.dart';
 import '/utils/validator.dart';
 
 import '/screens/home.dart';
+
+const kTextFieldDecoration = InputDecoration(
+  //hintText: 'Enter a value',
+  hintStyle: TextStyle(color: Colors.blueGrey),
+  contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+);
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -28,6 +33,16 @@ class _LoginPageState extends State<LoginPage> {
   final _focusPassword = FocusNode();
 
   bool _isProcessing = false;
+  bool _obscureText = true;
+
+  // @override
+  // void dispose() {
+  //   _emailTextController.dispose();
+  //   _passwordTextController.dispose();
+  //   _focusEmail.dispose();
+  //   _focusPassword.dispose();
+  //   super.dispose();
+  // }
 
   Future<FirebaseApp> _initializeFirebase() async {
     FirebaseApp firebaseApp = await Firebase.initializeApp();
@@ -55,25 +70,51 @@ class _LoginPageState extends State<LoginPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('FaSoLaSync'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text(
+            'Log In',
+            style: TextStyle(color: Colors.black),
+          ),
+          backgroundColor: Colors.white,
         ),
         body: FutureBuilder(
           future: _initializeFirebase(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
-              return Padding(
+              return Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Color(0xFFC5DFF8), Color(0xFF4A55A2)],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
                 padding: const EdgeInsets.only(left: 24.0, right: 24.0),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 24.0, right: 24.0),
-                      child: Text(
-                        'Login',
-                        // ignore: deprecated_member_use
-                        style: Theme.of(context).textTheme.headline1,
+                    const SizedBox(height: 50.0),
+                    Text(
+                      'Start listening with a\nFaSoLaSync account.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Color(0xFF4A55A2),
+                        fontSize: 30,
+                        fontFamily: 'Poppins',
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
+                    SizedBox(height: 25.0),
+
+                    // const SizedBox(height: 50.0),
+                    // SvgPicture.asset(
+                    //   'assets/undraw_music_re_a2jk.svg',
+                    //   height: 200,
+                    // ),
+
                     Form(
                       key: _formKey,
                       child: Column(
@@ -84,7 +125,9 @@ class _LoginPageState extends State<LoginPage> {
                             validator: (value) => Validator.validateEmail(
                               email: value,
                             ),
-                            decoration: InputDecoration(
+                            decoration: kTextFieldDecoration.copyWith(
+                              filled: true,
+                              fillColor: Colors.white,
                               hintText: "Email",
                               errorBorder: UnderlineInputBorder(
                                 borderRadius: BorderRadius.circular(6.0),
@@ -98,21 +141,31 @@ class _LoginPageState extends State<LoginPage> {
                           TextFormField(
                             controller: _passwordTextController,
                             focusNode: _focusPassword,
-                            obscureText: true,
+                            obscureText: _obscureText,
                             validator: (value) => Validator.validatePassword(
                               password: value,
                             ),
-                            decoration: InputDecoration(
+                            decoration: kTextFieldDecoration.copyWith(
+                              suffixIcon: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    _obscureText = !_obscureText;
+                                  });
+                                },
+                                child: Icon(_obscureText
+                                    ? Icons.visibility
+                                    : Icons.visibility_off),
+                              ),
+                              filled: true,
+                              fillColor: Colors.white,
                               hintText: "Password",
                               errorBorder: UnderlineInputBorder(
                                 borderRadius: BorderRadius.circular(6.0),
-                                borderSide: const BorderSide(
-                                  color: Colors.red,
-                                ),
+                                borderSide: const BorderSide(color: Colors.red),
                               ),
                             ),
                           ),
-                          const SizedBox(height: 24.0),
+                          const SizedBox(height: 25.0),
                           _isProcessing
                               ? const CircularProgressIndicator()
                               : Row(
@@ -154,29 +207,50 @@ class _LoginPageState extends State<LoginPage> {
                                             }
                                           }
                                         },
+                                        style: ElevatedButton.styleFrom(
+                                            primary: Colors.white,
+                                            onPrimary: Color(0xFF4A55A2),
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 10.0,
+                                                horizontal: 20.0)),
                                         child: const Text(
-                                          'Sign In',
-                                          style: TextStyle(color: Colors.white),
+                                          'Log In',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold),
                                         ),
                                       ),
+
+                                      //   child: const Padding(
+                                      //     padding: EdgeInsets.symmetric(
+                                      //         vertical: 10.0, horizontal: 20.0),
+                                      //     child: const Text(
+                                      //       'Sign In',
+                                      //       style: TextStyle(
+                                      //         color: Color(0xFF4A55A2),
+                                      //       ),
+                                      //     ),
+                                      //   ),
+                                      // ),
+
+                                      //const SizedBox(width: 24.0),
+
+                                      // Expanded(
+                                      //   child: ElevatedButton(
+                                      //     onPressed: () {
+                                      //       Navigator.of(context).push(
+                                      //         MaterialPageRoute(
+                                      //           builder: (context) =>
+                                      //               const RegisterPage(),
+                                      //         ),
+                                      //       );
+                                      //     },
+                                      //     child: const Text(
+                                      //       'Register',
+                                      //       style: TextStyle(color: Colors.white),
+                                      //     ),
+                                      //   ),
+                                      // ),
                                     ),
-                                    const SizedBox(width: 24.0),
-                                    // Expanded(
-                                    //   child: ElevatedButton(
-                                    //     onPressed: () {
-                                    //       Navigator.of(context).push(
-                                    //         MaterialPageRoute(
-                                    //           builder: (context) =>
-                                    //               const RegisterPage(),
-                                    //         ),
-                                    //       );
-                                    //     },
-                                    //     child: const Text(
-                                    //       'Register',
-                                    //       style: TextStyle(color: Colors.white),
-                                    //     ),
-                                    //   ),
-                                    // ),
                                   ],
                                 )
                         ],
@@ -188,8 +262,8 @@ class _LoginPageState extends State<LoginPage> {
             }
 
             return const Center(
-              child: CircularProgressIndicator(),
-            );
+                //child: CircularProgressIndicator(),
+                );
           },
         ),
       ),

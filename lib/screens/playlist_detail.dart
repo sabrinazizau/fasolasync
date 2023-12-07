@@ -28,8 +28,7 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
 
   selectIdPlaylist(String id) async {
     List data = [];
-    data =
-        jsonDecode(await ds.selectId(token, project, 'fasolasync', appid, id));
+    data = jsonDecode(await ds.selectId(token, project, 'playlist', appid, id));
     playlist = data.map((e) => PlaylistModel.fromJson(e)).toList();
 
     playlist_image = playlist[0].playlist_image;

@@ -1,11 +1,13 @@
 // ignore_for_file: prefer_interpolation_to_compose_strings, non_constant_identifier_names
 
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class DataService {
   Future insertPlaylist(String appid, String playlist_name,
-      String playlist_image, String playlist_desc) async {
+      String playlist_image, String playlist_desc, String song_id) async {
     String uri = 'https://io.etter.cloud/v4/insert';
 
     try {
@@ -16,7 +18,36 @@ class DataService {
         'appid': appid,
         'playlist_name': playlist_name,
         'playlist_image': playlist_image,
-        'playlist_desc': playlist_desc
+        'playlist_desc': playlist_desc,
+        'song_id': song_id
+      });
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else {
+        // Return an empty array
+        return '[]';
+      }
+    } catch (e) {
+      // Print error here
+      return '[]';
+    }
+  }
+
+  Future insertSongs(String appid, String title, String artist, String duration,
+      String url_song) async {
+    String uri = 'https://io.etter.cloud/v4/insert';
+
+    try {
+      final response = await http.post(Uri.parse(uri), body: {
+        'token': '651bc3ed9b493f4b9fe2485f',
+        'project': 'fasolasync',
+        'collection': 'songs',
+        'appid': appid,
+        'title': title,
+        'artist': artist,
+        'duration': duration,
+        'url_song': url_song
       });
 
       if (response.statusCode == 200) {
@@ -1207,4 +1238,31 @@ class DataService {
       return [];
     }
   }
+
+  // Future uploadMP3(
+  //     String token, String project, File mp3File, String ext) async {
+  //   try {
+  //     String uri = 'https://io.etter.cloud/v4/upload';
+  //     // Membuat request multipart
+  //     var request = http.MultipartRequest('POST', Uri.parse(uri));
+
+  //     request.fields['token'] = token;
+  //     request.fields['project'] = project;
+
+  //     // Menambahkan file MP3 ke request
+  //     request.files.add(http.MultipartFile.fromBytes('file', mp3File, filename: 'filename.' + ext));
+
+  //     // Mengirim request
+  //     var response = await request.send();
+
+  //     if (response.statusCode == 200) {
+  //       print('File berhasil diunggah');
+  //       // Tanggapi sesuai dengan respons API atau server
+  //     } else {
+  //       print('Gagal mengunggah file: ${response.statusCode}');
+  //     }
+  //   } catch (e) {
+  //     print('Error: $e');
+  //   }
+  // }
 }

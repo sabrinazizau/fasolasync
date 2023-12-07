@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:page_transition/page_transition.dart';
+import 'package:tugas5/admin/song_form_add.dart';
 import 'package:tugas5/screens/playlist_detail.dart';
 import 'package:tugas5/screens/playlist_form_add.dart';
+import 'package:tugas5/screens/playlist_list.dart';
 import 'package:tugas5/screens/register_page.dart';
+import 'package:tugas5/services/playlist_operations.dart';
 import '/screens/nav_bar.dart';
 import '/screens/home.dart';
 import 'firebase_options.dart';
@@ -33,13 +36,15 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.indigo,
       ),
-      home: SplashScreen(), // Menggunakan SplashScreen sebagai halaman awal
+      home: SongFormAdd(), // Menggunakan SplashScreen sebagai halaman awal
       routes: {
         'home': (context) => const MusicPlayerScreen(),
         'login_page': (context) => const LoginPage(),
         'register_page': (context) => const RegisterPage(),
         'playlist_form_add': (context) => const PlaylistFormAdd(),
+        'playlist_operations': (context) => HomeContent(),
         'playlist_detail': (context) => const PlaylistDetail(),
+        'playlist_list': (context) => const PlaylistList(),
       },
     );
   }
