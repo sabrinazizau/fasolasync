@@ -79,6 +79,10 @@ class _LoginPageState extends State<LoginPage> {
             style: TextStyle(color: Colors.black),
           ),
           backgroundColor: Colors.white,
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text('FaSoLaSync'),
         ),
         body: FutureBuilder(
           future: _initializeFirebase(),
@@ -106,6 +110,14 @@ class _LoginPageState extends State<LoginPage> {
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w700,
                       ),
+                      'Start listening with a FaSoLaSync account.',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
+                    const SizedBox(height: 50.0),
+                    SvgPicture.asset(
+                      'assets/undraw_music_re_a2jk.svg',
+                      height: 200,
                     ),
                     SizedBox(height: 25.0),
 

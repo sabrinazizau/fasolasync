@@ -47,7 +47,7 @@ class DataService {
         'title': title,
         'artist': artist,
         'duration': duration,
-        'url_song': url_song
+        'url_song': url_song,
       });
 
       if (response.statusCode == 200) {

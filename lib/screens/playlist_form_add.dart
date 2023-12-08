@@ -18,6 +18,7 @@ class _PlaylistFormAddState extends State<PlaylistFormAdd> {
   final playlist_name = TextEditingController();
   final playlist_desc = TextEditingController();
   final playlist_image = TextEditingController();
+  final gambar_aset = TextEditingController();
   final song_id = TextEditingController();
 
   DataService ds = DataService();
