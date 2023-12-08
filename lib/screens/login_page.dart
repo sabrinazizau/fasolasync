@@ -71,25 +71,22 @@ class _LoginPageState extends State<LoginPage> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
             onPressed: () => Navigator.of(context).pop(),
           ),
           title: const Text(
             'Log In',
-            style: TextStyle(color: Colors.black),
+            style: TextStyle(
+                color: Color(0xFF4A55A2), fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.white,
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-          title: const Text('FaSoLaSync'),
         ),
         body: FutureBuilder(
           future: _initializeFirebase(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.done) {
               return Container(
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     colors: [Color(0xFFC5DFF8), Color(0xFF4A55A2)],
                     begin: Alignment.topCenter,
@@ -101,7 +98,7 @@ class _LoginPageState extends State<LoginPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 50.0),
-                    Text(
+                    const Text(
                       'Start listening with a\nFaSoLaSync account.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -110,16 +107,8 @@ class _LoginPageState extends State<LoginPage> {
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w700,
                       ),
-                      'Start listening with a FaSoLaSync account.',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                     ),
-                    const SizedBox(height: 50.0),
-                    SvgPicture.asset(
-                      'assets/undraw_music_re_a2jk.svg',
-                      height: 200,
-                    ),
-                    SizedBox(height: 25.0),
+                    const SizedBox(height: 25.0),
 
                     // const SizedBox(height: 50.0),
                     // SvgPicture.asset(
@@ -164,9 +153,11 @@ class _LoginPageState extends State<LoginPage> {
                                     _obscureText = !_obscureText;
                                   });
                                 },
-                                child: Icon(_obscureText
-                                    ? Icons.visibility
-                                    : Icons.visibility_off),
+                                child: Icon(
+                                    _obscureText
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                    color: Color(0xFF4A55A2)),
                               ),
                               filled: true,
                               fillColor: Colors.white,
