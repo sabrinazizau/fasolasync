@@ -6,6 +6,7 @@ import '../utils/rounded_button.dart';
 import '/screens/home.dart';
 import '/screens/login_page.dart';
 import 'package:tugas5/screens/register_page.dart';
+//
 
 class NavBarDemo extends StatefulWidget {
   final User? user; // User bisa null jika belum login
@@ -25,6 +26,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
           : _buildLoggedOutAppBar(),
       drawer: widget.user != null
           ? Drawer(
+              backgroundColor: Colors.white,
               child: ListView(
                 children: <Widget>[
                   UserAccountsDrawerHeader(
@@ -34,14 +36,30 @@ class _NavBarDemoState extends State<NavBarDemo> {
                       backgroundColor: Colors.white,
                       child: Icon(Icons.person),
                     ),
+                    decoration: BoxDecoration(
+                      color: Color(0xFF4A55A2),
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsets.all(14.0),
-                    child: Text('Menu'),
+                    child: Text(
+                      'Menu',
+                      style: TextStyle(
+                        color: Color(0xFF4A55A2),
+                      ),
+                    ),
                   ),
                   ListTile(
-                    leading: Icon(Icons.home),
-                    title: Text('Home'),
+                    leading: Icon(
+                      Icons.home,
+                      color: Color(0xFF4A55A2),
+                    ),
+                    title: Text(
+                      'Home',
+                      style: TextStyle(
+                        color: Color(0xFF4A55A2),
+                      ),
+                    ),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -52,8 +70,17 @@ class _NavBarDemoState extends State<NavBarDemo> {
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.library_music),
-                    title: Text('Library'),
+                    leading: Icon(
+                      Icons.library_music,
+                      color: Color(0xFF4A55A2),
+                    ),
+                    title: Text(
+                      'Library',
+                      style: TextStyle(
+                        color: Color(0xFF4A55A2),
+                      ),
+                    ),
+
                     // onTap: () {
                     //   Navigator.push(
                     //     context,
@@ -62,26 +89,59 @@ class _NavBarDemoState extends State<NavBarDemo> {
                     //   );
                     // },
                   ),
+                  // SizedBox(
+                  //   height: 40,
+                  //   width: double.infinity,
+                  //   child: RoundedButton(
+                  //     colour: Colors.white,
+                  //     title: 'Add Playlist',
+                  //     onPressed: () {
+                  //       Navigator.pushNamed(context, 'playlist_form_add');
+                  //     },
+                  //   ),
+                  // ),
+
                   RoundedButton(
-                      colour: Colors.greenAccent,
+                      colour: Color(0xFFBFACE2),
                       title: 'Add Playlist',
                       onPressed: () {
                         Navigator.pushNamed(context, 'playlist_form_add');
                       }),
                   Padding(
                     padding: const EdgeInsets.all(14.0),
-                    child: Text("Settings"),
+                    child: Text(
+                      "Settings",
+                      style: TextStyle(
+                        color: Color(0xFF4A55A2),
+                      ),
+                    ),
                   ),
                   ListTile(
-                    leading: Icon(Icons.account_circle),
-                    title: Text('Edit Profile'),
+                    leading: Icon(
+                      Icons.account_circle,
+                      color: Color(0xFF4A55A2),
+                    ),
+                    title: Text(
+                      'Edit Profile',
+                      style: TextStyle(
+                        color: Color(0xFF4A55A2),
+                      ),
+                    ),
                     onTap: () {
                       // Handle navigation to the profile edit page
                     },
                   ),
                   ListTile(
-                    leading: Icon(Icons.logout),
-                    title: Text('Logout Account'),
+                    leading: Icon(
+                      Icons.logout,
+                      color: Color(0xFF4A55A2),
+                    ),
+                    title: Text(
+                      'Logout Account',
+                      style: TextStyle(
+                        color: Color(0xFF4A55A2),
+                      ),
+                    ),
                     onTap: _handleLogout,
                   ),
                 ],
@@ -107,14 +167,37 @@ class _NavBarDemoState extends State<NavBarDemo> {
     print("Building Logged In Appbar");
     setState(() {});
     return AppBar(
-      title: Text('FaSoLaSync'),
+      leading: Builder(builder: (BuildContext context) {
+        return IconButton(
+          icon: const Icon(
+            Icons.multitrack_audio_sharp,
+            color: Color(0xFF4A55A2),
+          ),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
+          tooltip: MaterialLocalizations.of(context).openAppDrawerTooltip,
+        );
+      }),
+      title: Text(
+        'FaSoLaSync',
+        style: TextStyle(color: Color(0xFF4A55A2), fontWeight: FontWeight.bold),
+      ),
+      backgroundColor: Colors.white,
     );
   }
 
   AppBar _buildLoggedOutAppBar() {
     print("Building Logged Out Appbar");
     return AppBar(
-      title: Text('FaSoLaSync'),
+      //iconTheme: IconThemeData(color: Colors.black),
+      title: Text(
+        'FaSoLaSync',
+        style: TextStyle(
+          color: Color(0xFF4A55A2),
+        ),
+      ),
+      backgroundColor: Colors.white,
       actions: [
         TextButton(
           onPressed: () {
@@ -123,7 +206,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
           },
           child: Text(
             'Log In',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Color(0xFF4A55A2)),
           ),
         ),
         TextButton(
@@ -133,7 +216,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
           },
           child: Text(
             'Sign Up',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(color: Color(0xFF4A55A2)),
           ),
         ),
       ],

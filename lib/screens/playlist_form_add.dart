@@ -68,7 +68,7 @@ class _PlaylistFormAddState extends State<PlaylistFormAdd> {
                       backgroundColor: Colors.lightGreen, elevation: 0),
                   onPressed: () async {
                     List response = jsonDecode(await ds.insertPlaylist(appid,
-                        playlist_name.text, "-", playlist_desc.text, "-"));
+                        playlist_name.text, "", playlist_desc.text, "-"));
 
                     List<PlaylistModel> Playlist =
                         response.map((e) => PlaylistModel.fromJson(e)).toList();

@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:tugas5/models/playlist_model.dart';
 
 import 'package:file_picker/file_picker.dart';
+import 'package:tugas5/models/song_model.dart';
 
 import '../config.dart';
 import '../restapi.dart';
@@ -25,13 +26,25 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
   late ValueNotifier<int> _notifier;
 
   List<PlaylistModel> playlist = [];
+  List<SongsModel> songs = [];
 
   selectIdPlaylist(String id) async {
     List data = [];
     data = jsonDecode(await ds.selectId(token, project, 'playlist', appid, id));
-    playlist = data.map((e) => PlaylistModel.fromJson(e)).toList();
 
-    playlist_image = playlist[0].playlist_image;
+    if (data.isNotEmpty) {
+      playlist = data.map((e) => PlaylistModel.fromJson(e)).toList();
+      playlist_image = playlist[0].playlist_image;
+    }
+  }
+
+  selectIdSong(String id) async {
+    List data = [];
+    data = jsonDecode(await ds.selectId(token, project, 'songs', appid, id));
+
+    if (data.isNotEmpty) {
+      songs = data.map((e) => SongsModel.fromJson(e)).toList();
+    }
   }
 
   Future reloadDataPlaylist(dynamic value) async {
@@ -39,6 +52,14 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
       final args = ModalRoute.of(context)?.settings.arguments as List<String>;
 
       selectIdPlaylist(args[0]);
+    });
+  }
+
+  Future reloadDataSong(dynamic value) async {
+    setState(() {
+      final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+
+      selectIdSong(args[0]);
     });
   }
 
@@ -80,6 +101,7 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+
     return Scaffold(
       body: FutureBuilder<dynamic>(
         future: selectIdPlaylist(args[0]),
@@ -276,8 +298,6 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                                   ),
                                 ),
                                 DataColumn(label: Text('Title')),
-                                DataColumn(label: Text('Album')),
-                                DataColumn(label: Text('Date added')),
                                 DataColumn(label: Text('Duration')),
                               ],
                               rows: [
@@ -289,169 +309,42 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                                     ),
                                   ),
                                   DataCell(
-                                    Row(
-                                      children: [
-                                        Icon(Icons.music_note),
-                                        SizedBox(width: 10),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(height: 5),
-                                            Text('Remedi',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            SizedBox(height: 5),
-                                            Text('Tulus',
-                                                style: TextStyle(fontSize: 12)),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
+                                    songs.isNotEmpty
+                                        ? Row(
+                                            children: [
+                                              Icon(Icons.music_note),
+                                              SizedBox(width: 10),
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  SizedBox(height: 5),
+                                                  Text(songs[0].title ?? '',
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold)),
+                                                  SizedBox(height: 5),
+                                                  Text(songs[0].artist ?? '',
+                                                      style: TextStyle(
+                                                          fontSize: 12)),
+                                                ],
+                                              ),
+                                            ],
+                                          )
+                                        : Text('No songs available'),
                                   ),
-                                  DataCell(Text('Manusia')),
-                                  DataCell(Text('Jul 31, 2023')),
                                   DataCell(
-                                    Row(
-                                      children: [
-                                        Text('3:30'),
-                                        SizedBox(width: 80),
-                                        Icon(Icons.favorite,
-                                            color: Colors.green[400]),
-                                      ],
-                                    ),
+                                    songs.isEmpty
+                                        ? Row(
+                                            children: [
+                                              Text(songs[0].duration ?? ''),
+                                              SizedBox(width: 80),
+                                              Icon(Icons.favorite,
+                                                  color: Colors.green[400]),
+                                            ],
+                                          )
+                                        : Text(''),
                                   ),
-                                ]),
-                                DataRow(cells: [
-                                  DataCell(Text('2')),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        Icon(Icons.music_note),
-                                        SizedBox(width: 10),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(height: 5),
-                                            Text('Kepada Noor',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            SizedBox(height: 5),
-                                            Text('Panji Sakti',
-                                                style: TextStyle(fontSize: 12)),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  DataCell(Text('Tanpa Aku')),
-                                  DataCell(Text('Jul 31, 2023')),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        Text('4:09'),
-                                        SizedBox(width: 80),
-                                        Icon(Icons.favorite,
-                                            color: Colors.green[400]),
-                                      ],
-                                    ),
-                                  ),
-                                ]),
-                                DataRow(cells: [
-                                  DataCell(Text('3')),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        Icon(Icons.music_note),
-                                        SizedBox(width: 10),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(height: 5),
-                                            Text('Sepatu',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            SizedBox(height: 5),
-                                            Text('Tulus',
-                                                style: TextStyle(fontSize: 12)),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  DataCell(Text('Gajah')),
-                                  DataCell(Text('Jul 31, 2023')),
-                                  DataCell(Text('3:39')),
-                                ]),
-                                DataRow(cells: [
-                                  DataCell(Text('4')),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        Icon(Icons.music_note),
-                                        SizedBox(width: 10),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(height: 5),
-                                            Text('Bunga Tidur',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            SizedBox(height: 5),
-                                            Text('Tulus',
-                                                style: TextStyle(fontSize: 12)),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  DataCell(Text('Gajah')),
-                                  DataCell(Text('Jul 31, 2023')),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        Text('3:39'),
-                                        SizedBox(width: 80),
-                                        Icon(Icons.favorite,
-                                            color: Colors.green[400]),
-                                      ],
-                                    ),
-                                  ),
-                                ]),
-                                DataRow(cells: [
-                                  DataCell(Text('5')),
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        Icon(Icons.music_note),
-                                        SizedBox(width: 10),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            SizedBox(height: 5),
-                                            Text('Ruang Sendiri',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            SizedBox(height: 5),
-                                            Text('Tulus',
-                                                style: TextStyle(fontSize: 12)),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  DataCell(Text('Monokrom')),
-                                  DataCell(Text('Jul 31, 2023')),
-                                  DataCell(Text('4:29')),
                                 ]),
                               ],
                             ),

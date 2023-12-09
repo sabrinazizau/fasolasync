@@ -1,12 +1,12 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:tugas5/models/playlist_model.dart';
-
 import '../config.dart';
 import '../restapi.dart';
 
 class HomeContent extends StatefulWidget {
+  const HomeContent({Key? key}) : super(key: key);
+
   @override
   _HomeContentState createState() => _HomeContentState();
 }
@@ -37,69 +37,84 @@ class _HomeContentState extends State<HomeContent> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView.builder(
-        itemCount: playlist.length,
-        itemBuilder: (context, index) {
-          final item = playlist[index];
+      body: Container(
+        padding: EdgeInsets.all(75.0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFD6E6F2),
+              Color(0xFFA084DC),
+            ],
+          ),
+        ),
+        child: GridView.builder(
+          padding: EdgeInsets.only(bottom: 8.0),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 5,
+            crossAxisSpacing: 8.0,
+            mainAxisSpacing: 8.0,
+          ),
+          itemCount: playlist.length,
+          itemBuilder: (context, index) {
+            final item = playlist[index];
 
-          return InkWell(
-            onTap: () {
-              Navigator.pushNamed(context, 'playlist_detail',
-                  arguments: [item.id]).then((value) => selectAllPlaylist());
-            },
-            child: _buildAlbumCard(
-              item.playlist_image ?? 'assets/indie1.jpg',
-              item.playlist_name,
-              200,
-              200,
-            ),
-          );
-        },
+            return InkWell(
+              key: ValueKey(item.id),
+              onTap: () {
+                Navigator.pushNamed(context, 'playlist_detail',
+                    arguments: [item.id]).then((value) => selectAllPlaylist());
+              },
+              child: _buildAlbumCard(
+                item.playlist_image ?? '',
+                item.playlist_name,
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   Widget _buildAlbumCard(
-    String coverImage,
+    String? coverImage,
     String albumTitle,
-    double maxImageWidth,
-    double maxImageHeight,
   ) {
-    return Container(
-      width: maxImageWidth,
-      child: Card(
-        child: Column(
-          children: [
-            coverImage.isNotEmpty
-                ? Image.network(
-                    '$coverImage',
-                    width: maxImageWidth,
-                    height: maxImageHeight,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    width: maxImageWidth,
-                    height: maxImageHeight,
-                    child: Center(
-                      child: Icon(
-                        Icons.image,
-                        size: 50, // Adjust the size as needed
-                        color: Colors.grey, // Adjust the color as needed
-                      ),
-                    ),
-                  ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                '$albumTitle',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+    return Card(
+      child: Column(
+        children: [
+          SizedBox(height: 80),
+          if (coverImage != null && coverImage.isNotEmpty)
+            Flexible(
+              child: Image.network(
+                '$coverImage',
+                fit: BoxFit.fill,
+              ),
+            )
+          else
+            Container(
+              height: 80,
+              child: Center(
+                child: Icon(
+                  Icons.music_note,
+                  size: 50,
+                  color: Colors.grey,
                 ),
               ),
             ),
-          ],
-        ),
+          SizedBox(height: 50),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text(
+              '$albumTitle',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

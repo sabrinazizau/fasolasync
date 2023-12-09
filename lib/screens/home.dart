@@ -19,6 +19,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
       body: Row(
         children: <Widget>[
           NavigationRail(
+            backgroundColor: Color(0xFF4A55A2),
             selectedIndex: _selectedIndex,
             onDestinationSelected: (int index) {
               setState(() {
@@ -28,12 +29,12 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
             labelType: NavigationRailLabelType.all,
             destinations: const <NavigationRailDestination>[
               NavigationRailDestination(
-                icon: Icon(Icons.home),
-                label: Text('Home'),
+                icon: Icon(Icons.home, color: Colors.white),
+                label: Text('Home', style: TextStyle(color: Colors.white)),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.library_music),
-                label: Text('Library'),
+                icon: Icon(Icons.library_music, color: Colors.white),
+                label: Text('Library', style: TextStyle(color: Colors.white)),
               ),
             ],
           ),

@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:tugas5/screens/nav_bar.dart';
 
 import '/utils/fire_auth.dart';
 import '/utils/validator.dart';
@@ -53,7 +54,8 @@ class _LoginPageState extends State<LoginPage> {
       // ignore: use_build_context_synchronously
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => MusicPlayerScreen(),
+          //builder: (context) => MusicPlayerScreen(),
+          builder: (context) => NavBarDemo(user: user),
         ),
       );
     }

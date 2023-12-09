@@ -37,13 +37,13 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.indigo,
       ),
-      home: SongFormAdd(), // Menggunakan SplashScreen sebagai halaman awal
+      home: SplashScreen(), // Menggunakan SplashScreen sebagai halaman awal
       routes: {
         'home': (context) => const MusicPlayerScreen(),
         'login_page': (context) => const LoginPage(),
         'register_page': (context) => const RegisterPage(),
         'playlist_form_add': (context) => const PlaylistFormAdd(),
-        'playlist_operations': (context) => HomeContent(),
+        'playlist_operations': (context) => const HomeContent(),
         'playlist_detail': (context) => const PlaylistDetail(),
         'playlist_list': (context) => const PlaylistList(),
         'library': (context) => const libraryPage(),
