@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:tugas5/screens/nav_bar.dart';
+import 'package:fasolasync/screens/nav_bar.dart';
 
 import '/utils/fire_auth.dart';
 import '/utils/validator.dart';

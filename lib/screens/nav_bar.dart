@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:tugas5/screens/library.dart';
-import 'package:tugas5/services/playlist_operations.dart';
+import 'package:fasolasync/screens/library.dart';
+import 'package:fasolasync/services/playlist_operations.dart';
 import '../utils/rounded_button.dart';
 import '/screens/home.dart';
 import '/screens/login_page.dart';
-import 'package:tugas5/screens/register_page.dart';
+import 'package:fasolasync/screens/register_page.dart';
 //
 
 class NavBarDemo extends StatefulWidget {

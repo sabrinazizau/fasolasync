@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:tugas5/models/playlist_model.dart';
+import 'package:fasolasync/models/playlist_model.dart';
 
 import '/config.dart';
 import '/restapi.dart';

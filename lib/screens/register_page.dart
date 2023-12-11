@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:tugas5/utils/fire_auth.dart';
-import 'package:tugas5/utils/validator.dart';
+import 'package:fasolasync/utils/fire_auth.dart';
+import 'package:fasolasync/utils/validator.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import 'package:tugas5/screens/login_page.dart';
+import 'package:fasolasync/screens/login_page.dart';
 
 const kTextFieldDecoration = InputDecoration(
   //hintText: 'Enter a value',
@@ -45,8 +45,9 @@ class RegisterPageState extends State<RegisterPage> {
         child: Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
               onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
+              
             ),
             title: const Text(
               'Register',
