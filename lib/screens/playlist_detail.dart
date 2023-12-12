@@ -396,7 +396,10 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                         ),
                       ),
 
-                      Row(
+                      Positioned(
+                        right: 0,
+                        child: Stack(
+                          alignment: Alignment.bottomRight,
                         children: [
                           Container(
                             width: 60,
@@ -418,9 +421,65 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                                     .then(reloadDataPlaylist);
                               },
                             ),
-                          )
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(right: 65.0),
+                            child: GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  barrierDismissible: false,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: const Text("Warning"),
+                                      content: const Text("Remove this data?"),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          child: const Text("CANCEL"),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                        TextButton(
+                                          child: const Text("REMOVE"),
+                                          onPressed: () async {
+                                            bool response = await ds.removeId(
+                                                token,
+                                                project,
+                                                'playlist',
+                                                appid,
+                                                args[0]);
+
+                                            Navigator.of(context).pop();
+
+                                            if (response) {
+                                              Navigator.pop(context, true);
+                                            }
+                                          },
+                                        )
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              child: Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: Color(0xFF4A55A2), // Anda dapat mengubah warna sesuai kebutuhan
+                                ),
+                                child: Icon(Icons.delete_outline, size: 26.0, color: Colors.white),
+                              ),
+                            ),
+                          ),
                         ],
+                        ),
                       ),
+                        
+                      
+
+  
                       //     Padding(
                       //       padding: const EdgeInsets.only(right: 20.0),
                       //       child: GestureDetector(
@@ -502,9 +561,11 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                           physics: NeverScrollableScrollPhysics(),
                           itemCount: songsPlaylist.length,
                           itemBuilder: (context, index) {
+                            final item = songsPlaylist[index];
+                            
                             return ListTile(
-                              title: Text(songsPlaylist[index].title),
-                              subtitle: Text(songsPlaylist[index].artist),
+                              title: Text(item.title),
+                              subtitle: Text(item.artist),
                               trailing: IconButton(
                                 onPressed: () {
                                   playPause(index);
