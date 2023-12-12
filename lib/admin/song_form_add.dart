@@ -56,13 +56,31 @@ class _SongFormAddState extends State<SongFormAdd> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        title: const Text("Song Form Add"),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
+        ),
+        title: const Text(
+          'Song Form Add',
+          style: TextStyle(color: Color(0xFF4A55A2)),
+        ),
+        backgroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFD6E6F2),
+              Color(0xFFA084DC),
+            ],
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            //Description Task
+            // Description Task
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
               child: TextField(
@@ -119,7 +137,9 @@ class _SongFormAddState extends State<SongFormAdd> {
                 height: 45,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.lightGreen, elevation: 0),
+                    backgroundColor: Color(0xFF4A55A2),
+                    elevation: 0,
+                  ),
                   onPressed: () async {
                     List response = jsonDecode(await ds.insertSongs(appid,
                         title.text, artist.text, duration.text, url_song));

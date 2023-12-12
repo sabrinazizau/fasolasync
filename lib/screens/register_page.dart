@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:tugas5/utils/fire_auth.dart';
 import 'package:tugas5/utils/validator.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+//import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:tugas5/screens/login_page.dart';
 
@@ -20,7 +20,12 @@ class RegisterPage extends StatefulWidget {
   RegisterPageState createState() => RegisterPageState();
 }
 
-class RegisterPageState extends State<RegisterPage> {
+class RegisterPageState extends State<RegisterPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<Color?> _backgroundColor;
+  //late Animation<Color?> _textColor;
+
   final registerFormKey = GlobalKey<FormState>();
 
   final usernameTextController = TextEditingController();
@@ -35,34 +40,78 @@ class RegisterPageState extends State<RegisterPage> {
   bool _obscureText = true;
 
   @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 3),
+      vsync: this,
+    )..repeat(reverse: true);
+    _backgroundColor = ColorTween(
+      begin: const Color(0xFFEBC7E6),
+      end: const Color(0xFF645CBB),
+    ).animate(_controller);
+
+    //  _textColor = TweenSequence<Color?>(
+    //   <TweenSequenceItem<Color?>>[
+    //     TweenSequenceItem<Color?>(
+    //       tween: ColorTween(
+    //         begin: const Color(0xFF4A55A2),
+    //         end: const Color(0xFFFFFFFF),
+    //       ),
+    //       weight: 50,
+    //     ),
+    //     TweenSequenceItem<Color?>(
+    //       tween: ColorTween(
+    //         begin: const Color(0xFFFFFFFF),
+    //         end: const Color(0xFF4A55A2),
+    //       ),
+    //       weight: 50,
+    //     ),
+    //   ],
+    // ).animate(_controller);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-        onTap: () {
-          focusUsername.unfocus();
-          focusEmail.unfocus();
-          focusPassword.unfocus();
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: const Text(
-              'Register',
-              style: TextStyle(color: Color(0xFF4A55A2)),
-            ),
-            backgroundColor: Colors.white,
+      onTap: () {
+        focusUsername.unfocus();
+        focusEmail.unfocus();
+        focusPassword.unfocus();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
           ),
-          body: Container(
+          title: const Text(
+            'Sign Up',
+            style: TextStyle(
+                color: Color(0xFF4A55A2), fontWeight: FontWeight.bold),
+          ),
+          backgroundColor: Colors.white,
+        ),
+        body: AnimatedBuilder(
+          animation: _controller,
+          builder: (BuildContext context, Widget? child) {
+            return Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    Color(0xFFEBC7E6),
-                    Color(0xFF645CBB)
-                  ], // Blue and Purple
+                    _backgroundColor.value ?? Color(0xFFEBC7E6),
+                    _backgroundColor.value ?? Color(0xFF645CBB)
+                  ],
                 ),
               ),
               child: Padding(
@@ -76,7 +125,7 @@ class RegisterPageState extends State<RegisterPage> {
                         'Sign up to start\nlistening.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Color(0xFF4A55A2),
+                          color: Colors.white,
                           fontSize: 30,
                           fontFamily: 'Poppins',
                           fontWeight: FontWeight.w700,
@@ -90,144 +139,146 @@ class RegisterPageState extends State<RegisterPage> {
                       // ),
 
                       Form(
-                          key: registerFormKey,
-                          child: Column(
-                            children: <Widget>[
-                              TextFormField(
-                                controller: usernameTextController,
-                                focusNode: focusUsername,
-                                validator: (value) => Validator.validateName(
-                                  name: value,
-                                ),
-                                decoration: kTextFieldDecoration.copyWith(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  hintText: "Username",
-                                  errorBorder: UnderlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6.0),
-                                    borderSide: const BorderSide(
-                                      color: Colors.red,
-                                    ),
+                        key: registerFormKey,
+                        child: Column(
+                          children: <Widget>[
+                            TextFormField(
+                              controller: usernameTextController,
+                              focusNode: focusUsername,
+                              validator: (value) => Validator.validateName(
+                                name: value,
+                              ),
+                              decoration: kTextFieldDecoration.copyWith(
+                                filled: true,
+                                fillColor: Colors.white,
+                                hintText: "Username",
+                                errorBorder: UnderlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6.0),
+                                  borderSide: const BorderSide(
+                                    color: Colors.red,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8.0),
-                              TextFormField(
-                                controller: emailTextController,
-                                focusNode: focusEmail,
-                                validator: (value) => Validator.validateEmail(
-                                  email: value,
-                                ),
-                                decoration: kTextFieldDecoration.copyWith(
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  hintText: "Email",
-                                  errorBorder: UnderlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6.0),
-                                    borderSide: const BorderSide(
-                                      color: Colors.red,
-                                    ),
+                            ),
+                            const SizedBox(height: 8.0),
+                            TextFormField(
+                              controller: emailTextController,
+                              focusNode: focusEmail,
+                              validator: (value) => Validator.validateEmail(
+                                email: value,
+                              ),
+                              decoration: kTextFieldDecoration.copyWith(
+                                filled: true,
+                                fillColor: Colors.white,
+                                hintText: "Email",
+                                errorBorder: UnderlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6.0),
+                                  borderSide: const BorderSide(
+                                    color: Colors.red,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 8.0),
-                              TextFormField(
-                                controller: passwordTextController,
-                                focusNode: focusPassword,
-                                obscureText: _obscureText,
-                                validator: (value) =>
-                                    Validator.validatePassword(
-                                  password: value,
+                            ),
+                            const SizedBox(height: 8.0),
+                            TextFormField(
+                              controller: passwordTextController,
+                              focusNode: focusPassword,
+                              obscureText: _obscureText,
+                              validator: (value) => Validator.validatePassword(
+                                password: value,
+                              ),
+                              decoration: kTextFieldDecoration.copyWith(
+                                suffixIcon: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _obscureText = !_obscureText;
+                                    });
+                                  },
+                                  child: Icon(
+                                      _obscureText
+                                          ? Icons.visibility
+                                          : Icons.visibility_off,
+                                      color: Color(0xFF4A55A2)),
                                 ),
-                                decoration: kTextFieldDecoration.copyWith(
-                                  suffixIcon: GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        _obscureText = !_obscureText;
-                                      });
-                                    },
-                                    child: Icon(
-                                        _obscureText
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
-                                        color: Color(0xFF4A55A2)),
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.white,
-                                  hintText: "Password",
-                                  errorBorder: UnderlineInputBorder(
-                                    borderRadius: BorderRadius.circular(6.0),
-                                    borderSide: const BorderSide(
-                                      color: Colors.red,
-                                    ),
+                                filled: true,
+                                fillColor: Colors.white,
+                                hintText: "Password",
+                                errorBorder: UnderlineInputBorder(
+                                  borderRadius: BorderRadius.circular(6.0),
+                                  borderSide: const BorderSide(
+                                    color: Colors.red,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 32.0),
-                              isProcessing
-                                  ? const CircularProgressIndicator()
-                                  : Row(
-                                      children: [
-                                        Expanded(
-                                          child: ElevatedButton(
-                                            onPressed: () async {
+                            ),
+                            const SizedBox(height: 32.0),
+                            isProcessing
+                                ? const CircularProgressIndicator()
+                                : Row(
+                                    children: [
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          onPressed: () async {
+                                            setState(() {
+                                              isProcessing = true;
+                                            });
+
+                                            if (registerFormKey.currentState!
+                                                .validate()) {
+                                              User? user = await FireAuth
+                                                  .registerUsingEmailPassword(
+                                                name:
+                                                    usernameTextController.text,
+                                                email: emailTextController.text,
+                                                password:
+                                                    passwordTextController.text,
+                                              );
+
                                               setState(() {
-                                                isProcessing = true;
+                                                isProcessing = false;
                                               });
 
-                                              if (registerFormKey.currentState!
-                                                  .validate()) {
-                                                User? user = await FireAuth
-                                                    .registerUsingEmailPassword(
-                                                  name: usernameTextController
-                                                      .text,
-                                                  email:
-                                                      emailTextController.text,
-                                                  password:
-                                                      passwordTextController
-                                                          .text,
+                                              if (user != null) {
+                                                Navigator.of(context)
+                                                    .pushAndRemoveUntil(
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        LoginPage(),
+                                                  ),
+                                                  ModalRoute.withName('/'),
                                                 );
-
-                                                setState(() {
-                                                  isProcessing = false;
-                                                });
-
-                                                if (user != null) {
-                                                  Navigator.of(context)
-                                                      .pushAndRemoveUntil(
-                                                    MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          LoginPage(),
-                                                    ),
-                                                    ModalRoute.withName('/'),
-                                                  );
-                                                }
                                               }
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                                primary: Colors.white,
-                                                onPrimary: Color(0xFF4A55A2),
-                                                padding: EdgeInsets.symmetric(
-                                                    vertical: 10.0,
-                                                    horizontal: 20.0)),
-                                            child: const Text(
-                                              'Register',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold),
-                                              // child: const Text(
-                                              //   'Sign Up',
-                                              //   style: TextStyle(color: Colors.white),
-                                            ),
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                              primary: Colors.white,
+                                              onPrimary: Color(0xFF4A55A2),
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 10.0,
+                                                  horizontal: 20.0)),
+                                          child: const Text(
+                                            'Sign Up',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold),
+                                            // child: const Text(
+                                            //   'Sign Up',
+                                            //   style: TextStyle(color: Colors.white),
                                           ),
                                         ),
-                                      ],
-                                    )
-                            ],
-                          ))
+                                      ),
+                                    ],
+                                  ),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
-              )),
-        ));
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }

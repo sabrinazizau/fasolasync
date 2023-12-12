@@ -73,8 +73,8 @@ class _LoginPageState extends State<LoginPage> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
             onPressed: () => Navigator.of(context).pop(),
+            icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
           ),
           title: const Text(
             'Log In',

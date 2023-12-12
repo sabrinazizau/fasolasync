@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tugas5/screens/library.dart';
+import 'package:tugas5/screens/playlist_detail.dart';
 import '../services/playlist_operations.dart';
 // import '/screens/library.dart';
 
@@ -58,7 +59,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
       case 0:
         return HomeContent();
       case 1:
-        return libraryPage();
+        return PlaylistDetail();
       default:
         return Container();
     }

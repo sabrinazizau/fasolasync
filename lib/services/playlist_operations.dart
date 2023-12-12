@@ -20,12 +20,23 @@ class _HomeContentState extends State<HomeContent> {
   List<PlaylistModel> playlist = [];
 
   selectAllPlaylist() async {
-    List data =
-        jsonDecode(await ds.selectAll(token, project, 'playlist', appid));
+    try {
+      List data =
+          jsonDecode(await ds.selectAll(token, project, 'playlist', appid));
 
-    setState(() {
-      playlist = data.map((e) => PlaylistModel.fromJson(e)).toList();
-    });
+      if (data != null) {
+        setState(() {
+          playlist = data.map((e) => PlaylistModel.fromJson(e)).toList();
+        });
+      } else {
+        setState(() {
+          playlist = [];
+        });
+      }
+    } catch (e) {
+      // Print or log the error
+      print('Error fetching playlists: $e');
+    }
   }
 
   @override
@@ -82,37 +93,46 @@ class _HomeContentState extends State<HomeContent> {
     String albumTitle,
   ) {
     return Card(
-      child: Column(
+      child: Stack(
         children: [
-          SizedBox(height: 80),
-          if (coverImage != null && coverImage.isNotEmpty)
-            Flexible(
-              child: Image.network(
-                '$coverImage',
-                fit: BoxFit.fill,
-              ),
-            )
-          else
-            Container(
-              height: 80,
-              child: Center(
-                child: Icon(
-                  Icons.music_note,
-                  size: 50,
-                  color: Colors.grey,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (coverImage != null && coverImage.isNotEmpty)
+                Flexible(
+                  child: Image.network(
+                    fileUri + '$coverImage',
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              else
+                Container(
+                  width: 200,
+                  height: 200,
+                  color: Color(0xFF4A55A2), // Warna latar belakang placeholder
+                  child: Center(
+                    child: Icon(
+                      Icons.music_note,
+                      size: 50,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              SizedBox(height: 5),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  '$albumTitle',
+                  textAlign: TextAlign.center, // Teks berada di tengah
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-            ),
-          SizedBox(height: 50),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              '$albumTitle',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            ],
           ),
         ],
       ),

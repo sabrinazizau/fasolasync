@@ -6,8 +6,10 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:tugas5/admin/song_form_add.dart';
 import 'package:tugas5/screens/library.dart';
+import 'package:tugas5/screens/list_song.dart';
 import 'package:tugas5/screens/playlist_detail.dart';
 import 'package:tugas5/screens/playlist_form_add.dart';
+import 'package:tugas5/screens/playlist_form_edit.dart';
 import 'package:tugas5/screens/playlist_list.dart';
 import 'package:tugas5/screens/register_page.dart';
 import 'package:tugas5/services/playlist_operations.dart';
@@ -47,6 +49,8 @@ class MyApp extends StatelessWidget {
         'playlist_detail': (context) => const PlaylistDetail(),
         'playlist_list': (context) => const PlaylistList(),
         'library': (context) => const libraryPage(),
+        'list_song': (context) => const ListSong(),
+        'playlist_form_edit': (context) => const PlaylistFormEdit(),
       },
     );
   }
