@@ -5,11 +5,11 @@ import 'package:fasolasync/models/playlist_model.dart';
 import '../config.dart';
 import '../restapi.dart';
 
-class HomeContent extends StatefulWidget {
-  const HomeContent({Key? key}) : super(key: key);
+class AddPlaylistLib extends StatefulWidget {
+  const AddPlaylistLib({Key? key}) : super(key: key);
 
   @override
-  _HomeContentState createState() => _HomeContentState();
+  _AddPlaylistLibState createState() => _AddPlaylistLibState();
 }
 
 bool isUserLoggedIn() {
@@ -17,7 +17,7 @@ bool isUserLoggedIn() {
   return user != null;
 }
 
-class _HomeContentState extends State<HomeContent> {
+class _AddPlaylistLibState extends State<AddPlaylistLib> {
   final searchKeyword = TextEditingController();
   bool searchStatus = false;
 
@@ -40,7 +40,6 @@ class _HomeContentState extends State<HomeContent> {
         });
       }
     } catch (e) {
-      // Print or log the error
       print('Error fetching playlists: $e');
     }
   }
@@ -61,6 +60,21 @@ class _HomeContentState extends State<HomeContent> {
     // }
 
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          // onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            Navigator.pop(context, 'library');
+          },
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
+        ),
+        title: const Text(
+          'Add Playlist to Library',
+          style:
+              TextStyle(color: Color(0xFF4A55A2), fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.white,
+      ),
       body: Container(
         width: screenWidth,
         height: screenHeight,
@@ -88,15 +102,6 @@ class _HomeContentState extends State<HomeContent> {
 
             return InkWell(
               key: ValueKey(item.id),
-              onTap: () {
-                if (isUserLoggedIn()) {
-                  Navigator.pushNamed(context, 'playlist_detail',
-                          arguments: [item.id])
-                      .then((value) => selectAllPlaylist());
-                } else {
-                  showLoginPopup();
-                }
-              },
               child: _buildAlbumCard(
                 item.playlist_image ?? '',
                 item.playlist_name,
@@ -113,7 +118,6 @@ class _HomeContentState extends State<HomeContent> {
     String albumTitle,
   ) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
     final textScaleFactor = MediaQuery.of(context).textScaleFactor;
     return Card(
       child: Stack(
@@ -126,7 +130,6 @@ class _HomeContentState extends State<HomeContent> {
                   child: Image.network(
                     fileUri + '$coverImage',
                     width: screenWidth,
-                    height: screenHeight,
                     fit: BoxFit.cover,
                   ),
                 )
@@ -134,9 +137,7 @@ class _HomeContentState extends State<HomeContent> {
                 Flexible(
                   child: Container(
                     width: screenWidth,
-                    height: screenHeight,
-                    color:
-                        Color(0xFF4A55A2), // Warna latar belakang placeholder
+                    color: Color(0xFF4A55A2),
                     child: Center(
                       child: Icon(
                         Icons.music_note,
@@ -150,7 +151,7 @@ class _HomeContentState extends State<HomeContent> {
                 padding: const EdgeInsets.all(8.0),
                 child: Text(
                   '$albumTitle',
-                  textAlign: TextAlign.center, // Teks berada di tengah
+                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16 * textScaleFactor,
                     fontWeight: FontWeight.bold,
@@ -159,47 +160,34 @@ class _HomeContentState extends State<HomeContent> {
               ),
             ],
           ),
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: IconButton(
+                icon: Icon(
+                  Icons.add,
+                  size: 30 * textScaleFactor,
+                  color: Colors.black,
+                ),
+                onPressed: () {
+                  // Handle the add button press
+                  // Add your logic here
+                },
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
   int _calculateCrossAxisCount(double screenWidth) {
-    // Hitung jumlah kolom berdasarkan lebar layar
     int minCrossAxisCount = 2;
     int maxCrossAxisCount = 5;
 
     int calculatedCrossAxisCount = (screenWidth / 200).floor();
 
-    // Pastikan nilai berada di antara min dan max
     return calculatedCrossAxisCount.clamp(minCrossAxisCount, maxCrossAxisCount);
-  }
-
-  void showLoginPopup() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Login Required"),
-          content: Text("You need to log in to access this content."),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Tutup popup login
-                // Navigasi ke halaman login
-                Navigator.pushNamed(context, 'login_page');
-              },
-              child: Text("LOGIN"),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('CANCEL'),
-            ),
-          ],
-        );
-      },
-    );
   }
 }

@@ -19,7 +19,7 @@ class SongFormAdd extends StatefulWidget {
 class _SongFormAddState extends State<SongFormAdd> {
   final title = TextEditingController();
   final artist = TextEditingController();
-  final duration = TextEditingController();
+  // final duration = TextEditingController();
   // final url_song = TextEditingController();
 
   String url_song = '';
@@ -41,7 +41,7 @@ class _SongFormAddState extends State<SongFormAdd> {
         var file = jsonDecode(response);
 
         setState(() {
-          url_song = result.files.first.name;
+          url_song = fileUri + file['file_name'];
         });
       }
     } on PlatformException catch (e) {
@@ -85,17 +85,17 @@ class _SongFormAddState extends State<SongFormAdd> {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
-              child: TextField(
-                controller: duration,
-                keyboardType: TextInputType.text,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: 'Duration',
-                ),
-              ),
-            ),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+            //   child: TextField(
+            //     controller: duration,
+            //     keyboardType: TextInputType.text,
+            //     decoration: const InputDecoration(
+            //       border: OutlineInputBorder(),
+            //       hintText: 'Duration',
+            //     ),
+            //   ),
+            // ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
               child: ElevatedButton(
@@ -121,8 +121,8 @@ class _SongFormAddState extends State<SongFormAdd> {
                   style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.lightGreen, elevation: 0),
                   onPressed: () async {
-                    List response = jsonDecode(await ds.insertSongs(appid,
-                        title.text, artist.text, duration.text, url_song));
+                    List response = jsonDecode(await ds.insertSongs(
+                        appid, title.text, artist.text, url_song));
 
                     List<SongsModel> Songs =
                         response.map((e) => SongsModel.fromJson(e)).toList();

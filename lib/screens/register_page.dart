@@ -14,7 +14,7 @@ const kTextFieldDecoration = InputDecoration(
 );
 
 class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+  const RegisterPage({Key? key}) : super(key: key);
 
   @override
   RegisterPageState createState() => RegisterPageState();
@@ -45,7 +45,9 @@ class RegisterPageState extends State<RegisterPage> {
         child: Scaffold(
           appBar: AppBar(
             leading: IconButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                Navigator.pop(context);
+              }, 
               icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
               
             ),

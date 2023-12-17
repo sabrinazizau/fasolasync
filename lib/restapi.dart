@@ -34,34 +34,6 @@ class DataService {
     }
   }
 
-  Future insertSongs(String appid, String title, String artist, String duration,
-      String url_song) async {
-    String uri = 'https://io.etter.cloud/v4/insert';
-
-    try {
-      final response = await http.post(Uri.parse(uri), body: {
-        'token': '651bc3ed9b493f4b9fe2485f',
-        'project': 'fasolasync',
-        'collection': 'songs',
-        'appid': appid,
-        'title': title,
-        'artist': artist,
-        'duration': duration,
-        'url_song': url_song,
-      });
-
-      if (response.statusCode == 200) {
-        return response.body;
-      } else {
-        // Return an empty array
-        return '[]';
-      }
-    } catch (e) {
-      // Print error here
-      return '[]';
-    }
-  }
-
   Future selectAll(
       String token, String project, String collection, String appid) async {
     String uri = 'https://io.etter.cloud/v4/select_all/token/' +
@@ -1239,6 +1211,32 @@ class DataService {
     }
   }
 
+  Future insertSongs(
+      String appid, String title, String artist, String url_song) async {
+    String uri = 'https://io.etter.cloud/v4/insert';
+
+    try {
+      final response = await http.post(Uri.parse(uri), body: {
+        'token': '651bc3ed9b493f4b9fe2485f',
+        'project': 'fasolasync',
+        'collection': 'songs',
+        'appid': appid,
+        'title': title,
+        'artist': artist,
+        'url_song': url_song,
+      });
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else {
+        // Return an empty array
+        return '[]';
+      }
+    } catch (e) {
+      // Print error here
+      return '[]';
+    }
+  }
   // Future uploadMP3(
   //     String token, String project, File mp3File, String ext) async {
   //   try {

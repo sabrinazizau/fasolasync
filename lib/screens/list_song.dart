@@ -1,13 +1,11 @@
 import 'dart:convert';
-
+import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
-import 'package:fasolasync/models/song_model.dart';
+import '../models/song_model.dart';
 import '../config.dart';
 import '../models/playlist_model.dart';
 import '../restapi.dart';
-
-// Assuming you have the PlaylistDetail widget as mentioned earlier
-import '../screens/playlist_detail.dart';
+import 'playlist_detail.dart';
 
 class ListSong extends StatefulWidget {
   const ListSong({Key? key}) : super(key: key);
@@ -17,23 +15,23 @@ class ListSong extends StatefulWidget {
 }
 
 class ListSongState extends State<ListSong> {
+  late AudioPlayer audioPlayer;
+  bool isPlaying = false;
+  int currentlyPlayingIndex = -1;
+
   final searchKeyword = TextEditingController();
   bool searchStatus = false;
-
   DataService ds = DataService();
-
   List data = [];
   List<SongsModel> songs = [];
+  List<SongsModel> songsPlaylist = [];
   List<PlaylistModel> playlist = [];
-
   List<SongsModel> search_data = [];
   List<SongsModel> search_data_pre = [];
 
   selectAllSong() async {
     data = jsonDecode(await ds.selectAll(token, project, 'songs', appid));
-
     songs = data.map((e) => SongsModel.fromJson(e)).toList();
-
     setState(() {
       songs = songs;
     });
@@ -42,7 +40,6 @@ class ListSongState extends State<ListSong> {
   selectIdPlaylist(String id) async {
     List data = [];
     data = jsonDecode(await ds.selectId(token, project, 'playlist', appid, id));
-
     if (data.isNotEmpty) {
       playlist = data.map((e) => PlaylistModel.fromJson(e)).toList();
     }
@@ -51,7 +48,6 @@ class ListSongState extends State<ListSong> {
   selectIdSong(String id) async {
     List data = [];
     data = jsonDecode(await ds.selectId(token, project, 'songs', appid, id));
-
     if (data.isNotEmpty) {
       songs = data.map((e) => SongsModel.fromJson(e)).toList();
     }
@@ -69,7 +65,7 @@ class ListSongState extends State<ListSong> {
           .toList();
     }
 
-    //Refresh the UI
+    // Refresh the UI
     setState(() {
       songs = search_data;
     });
@@ -84,39 +80,39 @@ class ListSongState extends State<ListSong> {
   @override
   void initState() {
     selectAllSong();
-
     super.initState();
+    audioPlayer = AudioPlayer();
   }
 
-  // Future<void> addSongToPlaylist(String songId, String playlistId) async {
-  //   try {
-  //     // Fetch the existing playlist data
-  //     List playlistData = jsonDecode(
-  //         await ds.selectId(token, project, 'playlist', appid, playlistId));
+  Future<void> addSongToPlaylist(
+      List<String> songIds, String playlistId) async {
+    try {
+      // Fetch the existing playlist data
+      List playlistData = jsonDecode(
+          await ds.selectId(token, project, 'playlist', appid, playlistId));
 
-  //     if (playlistData.isNotEmpty) {
-  //       // Get the playlist model
-  //       PlaylistModel playlistModel =
-  //           PlaylistModel.fromJson(playlistData.first);
+      if (playlistData.isNotEmpty) {
+        // Get the playlist model
+        PlaylistModel playlistModel =
+            PlaylistModel.fromJson(playlistData.first);
 
-  //       // Update the playlist with the new song
-  //       playlistModel.song_ids.add(songId);
+        // Update the playlist with the new song
+        playlistModel.song_ids.addAll(songIds);
+        // Convert the updated playlist model back to JSON
+        String updatedPlaylistJson = jsonEncode(playlistModel.song_ids);
 
-  //       // Convert the updated playlist model back to JSON
-  //       String updatedPlaylistJson = jsonEncode(playlistModel.toJson());
+        // Update the playlist in the database
+        await ds.updateId('song_id', updatedPlaylistJson, token, project,
+            'playlist', appid, playlistId);
 
-  //       // Update the playlist in the database
-  //       await ds.updateId('songs', updatedPlaylistJson, token, project,
-  //           'playlist', appid, playlistId);
-
-  //       // Show a success message or perform additional actions if needed
-  //       print('Song added to the playlist successfully.');
-  //     }
-  //   } catch (e) {
-  //     // Handle errors, display an error message, or log the error
-  //     print('Error adding song to the playlist: $e');
-  //   }
-  // }
+        // Show a success message or perform additional actions if needed
+        print('Song added to the playlist successfully.');
+      }
+    } catch (e) {
+      // Handle errors, display an error message, or log the error
+      print('Error adding song to the playlist: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +120,18 @@ class ListSongState extends State<ListSong> {
 
     return Scaffold(
       appBar: AppBar(
-        title: !searchStatus ? const Text("Playlist List") : search_field(),
+        leading: IconButton(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
+        ),
+        title: !searchStatus
+            ? const Text(
+                "Playlist List",
+                style: TextStyle(
+                    color: Color(0xFF4A55A2), fontWeight: FontWeight.bold),
+              )
+            : search_field(),
+        backgroundColor: Colors.white,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 20.0),
@@ -151,21 +158,58 @@ class ListSongState extends State<ListSong> {
             return Text('${snapshot.error}',
                 style: const TextStyle(color: Colors.red));
           } else {
-            return Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: songs.length,
-                    itemBuilder: (context, index) {
-                      final item = songs[index];
+            return Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFFD6E6F2),
+                    Color(0xFFA084DC),
+                  ],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ListView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  itemCount: songs.length,
+                  itemBuilder: (context, index) {
+                    final item = songs[index];
 
-                      return ListTile(
-                        title: Text(item.title),
-                        subtitle: Text(item.artist),
-                        onTap: () {
-                          Navigator.pushNamed(context, 'song_play',
-                              arguments: [item.id]).then(reloadDataSong);
-                        },
+                    return Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.white,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 4),
+                      child: ListTile(
+                        title: Text(
+                          item.title,
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15),
+                        ),
+                        subtitle: Text(
+                          item.artist,
+                          style: TextStyle(color: Colors.black, fontSize: 12),
+                        ),
+                        leading: IconButton(
+                          icon: Icon(
+                            isPlaying && currentlyPlayingIndex == index
+                                ? Icons.pause
+                                : Icons.play_arrow,
+                            color: Color(0xFF4A55A2),
+                          ),
+                          onPressed: () {
+                            handlePlayPause(index);
+                          },
+                        ),
+                        // onTap: () {
+                        //   Navigator.pushNamed(context, 'song_play',
+                        //       arguments: [item.id]).then(reloadDataSong);
+                        // },
                         trailing: Container(
                           width: 40,
                           height: 40,
@@ -180,16 +224,18 @@ class ListSongState extends State<ListSong> {
                               size: 20,
                             ),
                             onPressed: () {
+                              List<String> songIdsToAdd =
+                                  songs.map((song) => song.id).toList();
                               // Call the method to add the song to the playlist
-                              // addSongToPlaylist(item.id, args[0]);
+                              addSongToPlaylist(songIdsToAdd, args[0]);
                             },
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              ],
+              ),
             );
           }
         },
@@ -209,6 +255,7 @@ class ListSongState extends State<ListSong> {
               },
               child: const Icon(
                 Icons.search,
+                color: Color(0xFF4A55A2),
                 size: 26.0,
               ),
             ),
@@ -248,5 +295,91 @@ class ListSongState extends State<ListSong> {
         ),
       ),
     );
+  }
+
+  Widget buildPlayPauseButton(int index) {
+    return IconButton(
+      icon: Icon(
+        isPlaying && currentlyPlayingIndex == index
+            ? Icons.pause
+            : Icons.play_arrow,
+        color: Colors.white,
+      ),
+      onPressed: () {
+        handlePlayPause(index);
+      },
+    );
+  }
+
+  void handlePlayPause(int index) async {
+    if (audioPlayer.playing) {
+      await audioPlayer.stop();
+      setState(() {
+        isPlaying = false;
+      });
+    } else {
+      String songUrl = songs[index].url_song;
+      String encodedUrl = Uri.encodeFull(songUrl);
+
+      try {
+        await audioPlayer.setUrl(encodedUrl);
+        await audioPlayer.play();
+        setState(() {
+          isPlaying = true;
+          currentlyPlayingIndex = index;
+        });
+
+        audioPlayer.playerStateStream.listen((playerState) {
+          if (playerState.processingState == ProcessingState.completed) {
+            setState(() {
+              isPlaying = false;
+            });
+          }
+        });
+      } catch (e) {
+        print('Error playing the song: $e');
+        setState(() {
+          isPlaying = false;
+        });
+      }
+    }
+    // Stop the currently playing song if any
+    // String songUrl = songs[index].url_song;
+    // print('Playing song from URL: $songUrl');
+
+    // String encodedUrl = Uri.encodeFull(songUrl);
+    // if (!isPlaying) {
+    //   isPlaying = true;
+
+    //   audioPlayer.play(UrlSource(encodedUrl));
+    //   audioPlayer.onPlayerComplete.listen((event) {
+    //     setState(() {
+    //       isPlaying = false;
+    //     });
+    //   });
+    // } else {
+    //   audioPlayer.pause();
+    //   isPlaying = false;
+    // }
+    // setState(() {});
+
+    // Check if the URL is valid
+    // if (encodedUrl.isNotEmpty) {
+    //   await audioPlayer.play(UrlSource(encodedUrl));
+
+    //   setState(() {
+    //     isPlaying = true;
+    //     currentlyPlayingIndex = index;
+    //   });
+
+    //   audioPlayer.onPlayerComplete.listen((event) {
+    //     setState(() {
+    //       isPlaying = false;
+    //     });
+    //   });
+    // } else {
+    //   // Handle invalid URL
+    //   print('Invalid song URL');
+    // }
   }
 }
