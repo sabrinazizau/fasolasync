@@ -195,21 +195,21 @@ class ListSongState extends State<ListSong> {
                           item.artist,
                           style: TextStyle(color: Colors.black, fontSize: 12),
                         ),
-                        leading: IconButton(
-                          icon: Icon(
-                            isPlaying && currentlyPlayingIndex == index
-                                ? Icons.pause
-                                : Icons.play_arrow,
-                            color: Color(0xFF4A55A2),
+                        leading: AnimatedSwitcher(
+                          duration: Duration(milliseconds: 300),
+                          child: IconButton(
+                            key: ValueKey<int>(currentlyPlayingIndex),
+                            icon: Icon(
+                              isPlaying && currentlyPlayingIndex == index
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                              color: Color(0xFF4A55A2),
+                            ),
+                            onPressed: () {
+                              handlePlayPause(index);
+                            },
                           ),
-                          onPressed: () {
-                            handlePlayPause(index);
-                          },
                         ),
-                        // onTap: () {
-                        //   Navigator.pushNamed(context, 'song_play',
-                        //       arguments: [item.id]).then(reloadDataSong);
-                        // },
                         trailing: Container(
                           width: 40,
                           height: 40,
@@ -240,6 +240,7 @@ class ListSongState extends State<ListSong> {
           }
         },
       ),
+      bottomSheet: AudioControls(audioPlayer: audioPlayer, songs: songs, currentlyPlayingIndex: currentlyPlayingIndex, playNext: playNext, playPrevious: playPrevious),
     );
   }
 
@@ -316,6 +317,7 @@ class ListSongState extends State<ListSong> {
       await audioPlayer.stop();
       setState(() {
         isPlaying = false;
+        currentlyPlayingIndex = -1;
       });
     } else {
       String songUrl = songs[index].url_song;
@@ -340,46 +342,218 @@ class ListSongState extends State<ListSong> {
         print('Error playing the song: $e');
         setState(() {
           isPlaying = false;
+          currentlyPlayingIndex = -1;
         });
       }
     }
-    // Stop the currently playing song if any
-    // String songUrl = songs[index].url_song;
-    // print('Playing song from URL: $songUrl');
+    setState(() {
+      currentlyPlayingIndex = index;
+    });
+  }
 
-    // String encodedUrl = Uri.encodeFull(songUrl);
-    // if (!isPlaying) {
-    //   isPlaying = true;
+   void playNext() {
+    if (currentlyPlayingIndex < songs.length - 1) {
+      currentlyPlayingIndex++;
+      playSong(currentlyPlayingIndex);
+    }
+  }
 
-    //   audioPlayer.play(UrlSource(encodedUrl));
-    //   audioPlayer.onPlayerComplete.listen((event) {
-    //     setState(() {
-    //       isPlaying = false;
-    //     });
-    //   });
-    // } else {
-    //   audioPlayer.pause();
-    //   isPlaying = false;
-    // }
-    // setState(() {});
+  void playPrevious() {
+    if (currentlyPlayingIndex > 0) {
+      currentlyPlayingIndex--;
+      playSong(currentlyPlayingIndex);
+    }
+  }
 
-    // Check if the URL is valid
-    // if (encodedUrl.isNotEmpty) {
-    //   await audioPlayer.play(UrlSource(encodedUrl));
+   void playSong(int index) async {
+    String songUrl = songs[index].url_song;
+    String encodedUrl = Uri.encodeFull(songUrl);
 
-    //   setState(() {
-    //     isPlaying = true;
-    //     currentlyPlayingIndex = index;
-    //   });
+    try {
+      await audioPlayer.setUrl(encodedUrl);
+      await audioPlayer.play();
+      setState(() {
+        isPlaying = true;
+      });
 
-    //   audioPlayer.onPlayerComplete.listen((event) {
-    //     setState(() {
-    //       isPlaying = false;
-    //     });
-    //   });
-    // } else {
-    //   // Handle invalid URL
-    //   print('Invalid song URL');
-    // }
+      audioPlayer.playerStateStream.listen((playerState) {
+        if (playerState.processingState == ProcessingState.completed) {
+          setState(() {
+            isPlaying = false;
+          });
+        }
+      });
+    } catch (e) {
+      print('Error playing the song: $e');
+      setState(() {
+        isPlaying = false;
+        currentlyPlayingIndex = -1;
+      });
+    }
+  }
+}
+
+class AudioControls extends StatelessWidget {
+  final AudioPlayer audioPlayer;
+  final List<SongsModel> songs;
+  final int currentlyPlayingIndex;
+  final VoidCallback playNext;
+  final VoidCallback playPrevious;
+
+  AudioControls({
+    required this.audioPlayer,
+    required this.songs,
+    required this.currentlyPlayingIndex,
+    required this.playNext,
+    required this.playPrevious,
+  });
+
+  double sliderValue = 0.0;
+
+  void seekTo(double value) {
+    final duration = audioPlayer.duration;
+    if (duration != null) {
+      final position = duration * value;
+      audioPlayer.seek(position);
+    }
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+    return Container(
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                // Tambahkan logika untuk menampilkan gambar album atau ikon lainnya
+                backgroundColor: Colors.blue[900],
+                radius: 25,
+                child: Icon(
+                  Icons.music_note,
+                  color: Colors.white,
+                  size: 30,
+                ),
+              ),
+              SizedBox(width: 16),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    currentlyPlayingIndex != -1
+                        ? songs[currentlyPlayingIndex].title
+                        : '', // Ganti dengan nama lagu aktual
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    currentlyPlayingIndex != -1
+                        ? songs[currentlyPlayingIndex].artist
+                        : '',// Ganti dengan nama artis aktual
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StreamBuilder<Duration?>(
+            stream: audioPlayer.durationStream,
+            builder: (context, snapshot) {
+              final duration = snapshot.data ?? Duration.zero;
+              return StreamBuilder<Duration>(
+                stream: audioPlayer.positionStream,
+                builder: (context, snapshot) {
+                  var position = snapshot.data ?? Duration.zero;
+                  if (position > duration) {
+                    position = duration;
+                  }
+                  sliderValue = duration.inMilliseconds > 0
+                      ? position.inMilliseconds / duration.inMilliseconds
+                      : 0.0;
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Slider(
+                        value: sliderValue,
+                        onChanged: (value) {
+                          seekTo(value);
+                        },
+                        min: 0.0,
+                        max: 1.0,
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            formatDuration(position),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            '/',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          SizedBox(width: 8),
+                          Text(
+                            formatDuration(duration),
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: Icon(Icons.skip_previous),
+                onPressed: () {
+                  playPrevious();
+                },
+              ),
+              IconButton(
+                icon: Icon(
+                  audioPlayer.playing ? Icons.pause : Icons.play_arrow,
+                ),
+                onPressed: () {
+                  if (audioPlayer.playing) {
+                    audioPlayer.pause();
+                  } else {
+                    audioPlayer.play();
+                  }
+                },
+              ),
+              IconButton(
+                icon: Icon(Icons.skip_next),
+                onPressed: () {
+                  playNext();
+                },
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    String minutes = twoDigits(duration.inMinutes.remainder(60));
+    String seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 }
