@@ -1,15 +1,13 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:tugas5/config.dart';
-import 'package:tugas5/models/playlist_model.dart';
-import 'package:tugas5/restapi.dart';
+import '../config.dart';
+import '../models/playlist_model.dart';
+import '../restapi.dart';
 
 class libraryPage extends StatefulWidget {
-  const libraryPage({super.key});
+  const libraryPage({Key? key});
 
   @override
-  // ignore: library_private_types_in_public_api
   libraryPageState createState() => libraryPageState();
 }
 
@@ -25,13 +23,28 @@ class libraryPageState extends State<libraryPage> {
   List<PlaylistModel> search_data = [];
   List<PlaylistModel> search_data_pre = [];
 
-  selectAllPlaylist() async {
-    data = jsonDecode(await ds.selectAll(token, project, 'fasolasync', appid));
-
-    playlist = data.map((e) => PlaylistModel.fromJson(e)).toList();
-
+  Future<void> selectAllPlaylist() async {
+    data = jsonDecode(await ds.selectAll(token, project, 'playlist', appid));
     setState(() {
-      playlist = playlist;
+      playlist = data.map((e) => PlaylistModel.fromJson(e)).toList();
+    });
+  }
+
+  void filterPlaylist(String enteredKeyword) {
+    if (enteredKeyword.isEmpty) {
+      search_data = data.map((e) => PlaylistModel.fromJson(e)).toList();
+    } else {
+      search_data_pre = data.map((e) => PlaylistModel.fromJson(e)).toList();
+      search_data = search_data_pre
+          .where((user) => user.playlist_name
+              .toLowerCase()
+              .contains(enteredKeyword.toLowerCase()))
+          .toList();
+    }
+
+    // Refresh the UI
+    setState(() {
+      playlist = search_data;
     });
   }
 
@@ -44,376 +57,197 @@ class libraryPageState extends State<libraryPage> {
   @override
   void initState() {
     selectAllPlaylist();
-
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 685,
-      height: 1211,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(color: Colors.white),
-      child: Stack(
-        children: [
-          Positioned(
-            left: 0,
-            top: 0,
-            child: Container(
-              width: 685,
-              height: 115,
-              decoration: BoxDecoration(color: Color(0xFFD9D9D9)),
-            ),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    return Scaffold(
+      body: Container(
+        padding: EdgeInsets.all(75.0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFD6E6F2),
+              Color(0xFFA084DC),
+            ],
           ),
-          Positioned(
-            left: 101,
-            top: 29,
-            child: SizedBox(
-              width: 251,
-              height: 57,
-              child: Text(
-                'FaSoLaSync',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 36,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w700,
-                  height: 0,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.library_music,
+                          color: Colors.black,
+                          size: 45,
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          'YOUR LIBRARY',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 35,
+                            fontFamily: 'Poppins',
+                            fontWeight: FontWeight.bold,
+                            height: 3,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () =>
+                              Navigator.pushNamed(context, 'playlist_form_add'),
+                          icon: const Icon(Icons.add,
+                              color: Colors.black, size: 35),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 5),
+                    searchField(),
+                    SizedBox(height: 15),
+                    Text(
+                      'Playlists',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 20,
+                        fontFamily: 'Poppins',
+                        height: 3,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Divider(
+                      color: Colors.black,
+                      thickness: 1.5,
+                      height: 2,
+                    ),
+                    SizedBox(height: 10),
+                    Expanded(
+                      child: playlist.isEmpty
+                          ? Center(
+                              child: Text(
+                                'No playlists in your library',
+                                style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 16,
+                                  fontFamily: 'Poppins',
+                                ),
+                              ),
+                            )
+                          : Padding(
+                              padding: EdgeInsets.all(20.0),
+                              child: ListView.builder(
+                                scrollDirection: Axis.vertical,
+                                itemCount: playlist.length,
+                                itemBuilder: (context, index) {
+                                  final item = playlist[index];
+
+                                  return InkWell(
+                                    key: ValueKey(item.id),
+                                    onTap: () {
+                                      Navigator.pushNamed(
+                                              context, 'playlist_detail',
+                                              arguments: [item.id])
+                                          .then((value) => selectAllPlaylist());
+                                    },
+                                    child: _buildAlbumCard(
+                                      item.playlist_image ?? '',
+                                      item.playlist_name,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-          Positioned(
-            left: 99,
-            top: 173,
-            child: SizedBox(
-              width: 469,
-              height: 54,
-              child: Text(
-                'YOUR LIBRARY                       ',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 36,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w700,
-                  height: 0,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAlbumCard(String? coverImage, String albumTitle) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+    final textScaleFactor = MediaQuery.of(context).textScaleFactor;
+
+    return Card(
+      child: Container(
+        width: screenWidth, // Takes up the full width
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (coverImage != null && coverImage.isNotEmpty)
+              Image.network(
+                fileUri + '$coverImage',
+                height: 150, // Adjust the height as needed
+                width: 150, // Adjust the width as needed
+                fit: BoxFit.cover,
+              )
+            else
+              Container(
+                height: 150,
+                width: 150,
+                color: Color(0xFF4A55A2),
+                child: Center(
+                  child: Icon(
+                    Icons.music_note,
+                    size: 60 * textScaleFactor,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            left: 35,
-            top: 392,
-            child: Container(
-              width: 612,
-              decoration: ShapeDecoration(
-                shape: RoundedRectangleBorder(
-                  side: BorderSide(
-                    width: 2,
-                    strokeAlign: BorderSide.strokeAlignCenter,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(45.0),
+                child: Text(
+                  '$albumTitle' + ' • x songs',
+                  style: TextStyle(
+                    fontSize: 16 * textScaleFactor,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-          ),
-          Positioned(
-            left: 35,
-            top: 285,
-            child: Container(
-              width: 547,
-              height: 46,
-              decoration: BoxDecoration(color: Color(0xFFD9D9D9)),
-            ),
-          ),
-          Positioned(
-            left: 22,
-            top: 356,
-            child: SizedBox(
-              width: 125,
-              height: 36,
-              child: Text(
-                'Playlists',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 24,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w500,
-                  height: 0,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 197,
-            top: 410,
-            child: SizedBox(
-              width: 293,
-              height: 36,
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Amigdala  ',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                    TextSpan(
-                      text: '⚫  ',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 10,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' 1  Song',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                  ],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 31,
-            top: 147,
-            child: Container(
-              width: 66,
-              height: 66,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage("https://via.placeholder.com/66x66"),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 57,
-            top: 290,
-            child: SizedBox(
-              width: 341,
-              height: 36,
-              child: Text(
-                'Search your library ...',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 24,
-                  fontFamily: 'Poppins',
-                  fontWeight: FontWeight.w300,
-                  height: 0,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 35,
-            top: 410,
-            child: Container(
-              width: 152,
-              height: 152,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage("https://via.placeholder.com/152x152"),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 197,
-            top: 620,
-            child: SizedBox(
-              width: 293,
-              height: 36,
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Amigdala  ',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                    TextSpan(
-                      text: '⚫  ',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 10,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' 1  Song',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                  ],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 35,
-            top: 620,
-            child: Container(
-              width: 152,
-              height: 152,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage("https://via.placeholder.com/152x152"),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 197,
-            top: 849,
-            child: SizedBox(
-              width: 293,
-              height: 36,
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Amigdala  ',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                    TextSpan(
-                      text: '⚫  ',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 10,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' 1  Song',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                  ],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 35,
-            top: 849,
-            child: Container(
-              width: 152,
-              height: 152,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage("https://via.placeholder.com/152x152"),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: 193,
-            top: 1059,
-            child: SizedBox(
-              width: 293,
-              height: 36,
-              child: Text.rich(
-                TextSpan(
-                  children: [
-                    TextSpan(
-                      text: 'Amigdala  ',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                    TextSpan(
-                      text: '⚫  ',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 10,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                    TextSpan(
-                      text: ' 1  Song',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 24,
-                        fontFamily: 'Poppins',
-                        fontWeight: FontWeight.w500,
-                        height: 0,
-                      ),
-                    ),
-                  ],
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-          Positioned(
-            left: 31,
-            top: 1059,
-            child: Container(
-              width: 152,
-              height: 152,
-              decoration: BoxDecoration(
-                image: DecorationImage(
-                  image: NetworkImage("https://via.placeholder.com/152x152"),
-                  fit: BoxFit.fill,
-                ),
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget searchField() {
+    return TextField(
+      controller: searchKeyword,
+      autofocus: true,
+      cursorColor: Colors.black,
+      style: const TextStyle(
+        color: Colors.black,
+        fontSize: 20,
+      ),
+      textInputAction: TextInputAction.search,
+      onChanged: (value) {
+        filterPlaylist(value);
+      },
+      decoration: InputDecoration(
+        hintText: 'Search for library ...',
+        prefixIcon: Icon(Icons.search),
+        hintStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 20,
+        ),
       ),
     );
   }

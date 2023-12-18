@@ -59,7 +59,7 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
       case 0:
         return HomeContent();
       case 1:
-        return PlaylistDetail();
+        return libraryPage();
       default:
         return Container();
     }

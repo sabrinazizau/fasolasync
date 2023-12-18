@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
         'playlist_detail': (context) => const PlaylistDetail(),
         'playlist_list': (context) => const PlaylistList(),
         'library': (context) => const libraryPage(),
-        'list_song': (context) => const ListSong(),
+        'list_song': (context) => ListSong(),
         'playlist_form_edit': (context) => const PlaylistFormEdit(),
       },
     );
