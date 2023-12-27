@@ -14,7 +14,6 @@ import 'package:tugas5/screens/playlist_list.dart';
 import 'package:tugas5/screens/register_page.dart';
 import 'package:tugas5/services/playlist_operations.dart';
 import '/screens/nav_bar.dart';
-import '/screens/home.dart';
 import 'firebase_options.dart';
 import 'package:tugas5/screens/login_page.dart';
 
@@ -41,7 +40,6 @@ class MyApp extends StatelessWidget {
       ),
       home: SplashScreen(), // Menggunakan SplashScreen sebagai halaman awal
       routes: {
-        'home': (context) => const MusicPlayerScreen(),
         'login_page': (context) => const LoginPage(),
         'register_page': (context) => const RegisterPage(),
         'playlist_form_add': (context) => const PlaylistFormAdd(),

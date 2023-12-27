@@ -3,12 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:tugas5/screens/nav_bar.dart';
+import '../screens/nav_bar.dart';
 
 import '/utils/fire_auth.dart';
 import '/utils/validator.dart';
-
-import '/screens/home.dart';
 
 const kTextFieldDecoration = InputDecoration(
   //hintText: 'Enter a value',
@@ -51,10 +49,8 @@ class _LoginPageState extends State<LoginPage> {
     User? user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pushReplacement(
+      Navigator.of(context).push(
         MaterialPageRoute(
-          //builder: (context) => MusicPlayerScreen(),
           builder: (context) => NavBarDemo(user: user),
         ),
       );
@@ -202,11 +198,10 @@ class _LoginPageState extends State<LoginPage> {
 
                                             if (user != null) {
                                               // ignore: use_build_context_synchronously
-                                              Navigator.of(context)
-                                                  .pushReplacement(
+                                              Navigator.of(context).push(
                                                 MaterialPageRoute(
                                                   builder: (context) =>
-                                                      MusicPlayerScreen(),
+                                                      NavBarDemo(user: user),
                                                 ),
                                               );
                                             }

@@ -1,5 +1,7 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tugas5/screens/nav_bar.dart';
 
 import 'package:tugas5/utils/fire_auth.dart';
 import 'package:tugas5/utils/validator.dart';
@@ -38,6 +40,22 @@ class RegisterPageState extends State<RegisterPage>
 
   bool isProcessing = false;
   bool _obscureText = true;
+
+  Future<FirebaseApp> _initializeFirebase() async {
+    FirebaseApp firebaseApp = await Firebase.initializeApp();
+
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => NavBarDemo(user: user),
+        ),
+      );
+    }
+
+    return firebaseApp;
+  }
 
   @override
   void initState() {

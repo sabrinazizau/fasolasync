@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../config.dart';
 import '../models/playlist_model.dart';
@@ -9,6 +10,11 @@ class libraryPage extends StatefulWidget {
 
   @override
   libraryPageState createState() => libraryPageState();
+}
+
+bool isUserLoggedIn() {
+  User? user = FirebaseAuth.instance.currentUser;
+  return user != null;
 }
 
 class libraryPageState extends State<libraryPage> {
@@ -56,8 +62,11 @@ class libraryPageState extends State<libraryPage> {
 
   @override
   void initState() {
-    selectAllPlaylist();
     super.initState();
+
+    if (isUserLoggedIn()) {
+      selectAllPlaylist();
+    }
   }
 
   @override
@@ -132,43 +141,57 @@ class libraryPageState extends State<libraryPage> {
                       height: 2,
                     ),
                     SizedBox(height: 10),
-                    Expanded(
-                      child: playlist.isEmpty
-                          ? Center(
-                              child: Text(
-                                'No playlists in your library',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                  fontFamily: 'Poppins',
-                                ),
-                              ),
-                            )
-                          : Padding(
-                              padding: EdgeInsets.all(20.0),
-                              child: ListView.builder(
-                                scrollDirection: Axis.vertical,
-                                itemCount: playlist.length,
-                                itemBuilder: (context, index) {
-                                  final item = playlist[index];
-
-                                  return InkWell(
-                                    key: ValueKey(item.id),
-                                    onTap: () {
-                                      Navigator.pushNamed(
-                                              context, 'playlist_detail',
-                                              arguments: [item.id])
-                                          .then((value) => selectAllPlaylist());
-                                    },
-                                    child: _buildAlbumCard(
-                                      item.playlist_image ?? '',
-                                      item.playlist_name,
+                    isUserLoggedIn()
+                        ? Expanded(
+                            child: playlist.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      'No playlists in your library',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                        fontFamily: 'Poppins',
+                                      ),
                                     ),
-                                  );
-                                },
+                                  )
+                                : Padding(
+                                    padding: EdgeInsets.all(20.0),
+                                    child: ListView.builder(
+                                      scrollDirection: Axis.vertical,
+                                      itemCount: playlist.length,
+                                      itemBuilder: (context, index) {
+                                        final item = playlist[index];
+
+                                        return InkWell(
+                                          key: ValueKey(item.id),
+                                          onTap: () {
+                                            Navigator.pushNamed(
+                                                    context, 'playlist_detail',
+                                                    arguments: [item.id])
+                                                .then((value) =>
+                                                    selectAllPlaylist());
+                                          },
+                                          child: _buildAlbumCard(
+                                            item.playlist_image ?? '',
+                                            item.playlist_name,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                          )
+                        : Center(
+                            child: Text(
+                              'Please log in to view your playlists',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontFamily: 'Poppins',
+                                fontWeight:
+                                    FontWeight.bold, // Make the text bold
                               ),
                             ),
-                    ),
+                          ),
                   ],
                 ),
               ),
@@ -185,6 +208,7 @@ class libraryPageState extends State<libraryPage> {
     final textScaleFactor = MediaQuery.of(context).textScaleFactor;
 
     return Card(
+      color: Colors.transparent,
       child: Container(
         width: screenWidth, // Takes up the full width
         child: Row(

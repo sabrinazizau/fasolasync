@@ -1,11 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:tugas5/screens/library.dart';
-import 'package:tugas5/services/playlist_operations.dart';
+import '../screens/library.dart';
+import '../services/playlist_operations.dart';
 import '../utils/rounded_button.dart';
-import '/screens/home.dart';
-import '/screens/login_page.dart';
-import 'package:tugas5/screens/register_page.dart';
+import '../screens/login_page.dart';
+import '../screens/register_page.dart';
 //
 
 class NavBarDemo extends StatefulWidget {
@@ -18,6 +17,7 @@ class NavBarDemo extends StatefulWidget {
 }
 
 class _NavBarDemoState extends State<NavBarDemo> {
+  int _selectedIndex = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -61,12 +61,8 @@ class _NavBarDemoState extends State<NavBarDemo> {
                       ),
                     ),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => HomeContent(),
-                        ),
-                      );
+                      Navigator.pop(context); // Tutup drawer
+                      _onBottomNavItemTapped(0);
                     },
                   ),
                   ListTile(
@@ -80,14 +76,10 @@ class _NavBarDemoState extends State<NavBarDemo> {
                         color: Color(0xFF4A55A2),
                       ),
                     ),
-
-                    // onTap: () {
-                    //   Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => ProfileScreen()),
-                    //   );
-                    // },
+                    onTap: () {
+                      Navigator.pop(context); // Tutup drawer
+                      _onBottomNavItemTapped(1);
+                    },
                   ),
                   // SizedBox(
                   //   height: 40,
@@ -101,12 +93,6 @@ class _NavBarDemoState extends State<NavBarDemo> {
                   //   ),
                   // ),
 
-                  RoundedButton(
-                      colour: Color(0xFFBFACE2),
-                      title: 'Add Playlist',
-                      onPressed: () {
-                        Navigator.pushNamed(context, 'playlist_form_add');
-                      }),
                   Padding(
                     padding: const EdgeInsets.all(14.0),
                     child: Text(
@@ -148,10 +134,58 @@ class _NavBarDemoState extends State<NavBarDemo> {
               ),
             )
           : null,
-      body: Center(
-        child: MusicPlayerScreen(),
+      body: Row(
+        children: <Widget>[
+          NavigationRail(
+            backgroundColor: Color(0xFF4A55A2),
+            selectedIndex: _selectedIndex,
+            onDestinationSelected: (int index) {
+              setState(() {
+                _selectedIndex = index;
+              });
+            },
+            labelType: NavigationRailLabelType.all,
+            destinations: const <NavigationRailDestination>[
+              NavigationRailDestination(
+                icon: Icon(Icons.home, color: Colors.white),
+                label: Text('Home', style: TextStyle(color: Colors.white)),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.library_music, color: Colors.white),
+                label: Text('Library', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+          VerticalDivider(
+            thickness: 1,
+            width: 1,
+          ),
+          Expanded(
+            child: Center(
+              child:
+                  _buildContent(), // Display content based on the selected tab
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  Widget _buildContent() {
+    switch (_selectedIndex) {
+      case 0:
+        return HomeContent();
+      case 1:
+        return libraryPage();
+      default:
+        return Container();
+    }
+  }
+
+  void _onBottomNavItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
   }
 
   void _handleLogout() async {

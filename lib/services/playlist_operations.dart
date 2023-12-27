@@ -180,22 +180,35 @@ class _HomeContentState extends State<HomeContent> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Login Required"),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("Login Required"),
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () {
+                  Navigator.pop(context); // Close the login popup
+                },
+              ),
+            ],
+          ),
           content: Text("You need to log in to access this content."),
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Tutup popup login
-                // Navigasi ke halaman login
+                Navigator.pop(context); // Close the login popup
+                // Navigate to the login page
                 Navigator.pushNamed(context, 'login_page');
               },
               child: Text("LOGIN"),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
+                Navigator.pop(context); // Close the login popup
+                // Navigate to the register page
+                Navigator.pushNamed(context, 'register_page');
               },
-              child: Text('CANCEL'),
+              child: Text('REGISTER'),
             ),
           ],
         );
