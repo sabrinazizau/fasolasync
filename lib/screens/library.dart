@@ -114,12 +114,13 @@ class libraryPageState extends State<libraryPage> {
                           ),
                         ),
                         const Spacer(),
-                        IconButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, 'playlist_form_add'),
-                          icon: const Icon(Icons.add,
-                              color: Colors.black, size: 35),
-                        ),
+                        if (isUserLoggedIn())
+                          IconButton(
+                            onPressed: () => Navigator.pushNamed(
+                                context, 'playlist_form_add'),
+                            icon: const Icon(Icons.add,
+                                color: Colors.black, size: 35),
+                          ),
                       ],
                     ),
                     SizedBox(height: 5),
