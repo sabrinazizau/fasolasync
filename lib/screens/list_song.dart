@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:fasolasync/models/playlistSong_model.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
 import '../models/song_model.dart';
@@ -24,8 +25,8 @@ class ListSongState extends State<ListSong> {
   DataService ds = DataService();
   List data = [];
   List<SongsModel> songs = [];
-  List<SongsModel> songsPlaylist = [];
   List<PlaylistModel> playlist = [];
+  List<PlaylistSongModel> songsPlaylist = [];
   List<SongsModel> search_data = [];
   List<SongsModel> search_data_pre = [];
 
@@ -84,28 +85,40 @@ class ListSongState extends State<ListSong> {
     audioPlayer = AudioPlayer();
   }
 
-  Future<void> addSongToPlaylist(
-      List<String> songIds, String playlistId) async {
+  Future<void> addSongToPlaylist(String songId, String playlistId) async {
     try {
       // Fetch the existing playlist data
       List playlistData = jsonDecode(
           await ds.selectId(token, project, 'playlist', appid, playlistId));
 
-      if (playlistData.isNotEmpty) {
-        // Get the playlist model
-        PlaylistModel playlistModel =
-            PlaylistModel.fromJson(playlistData.first);
+      List songData =
+          jsonDecode(await ds.selectId(token, project, 'songs', appid, songId));
 
-        // Update the playlist with the new song
-        playlistModel.song_ids.addAll(songIds);
-        // Convert the updated playlist model back to JSON
-        String updatedPlaylistJson = jsonEncode(playlistModel.song_ids);
-
-        // Update the playlist in the database
-        await ds.updateId('song_id', updatedPlaylistJson, token, project,
-            'playlist', appid, playlistId);
-
+      if (playlistData.isNotEmpty && songData.isNotEmpty) {
+        String title = songData[0]['title'];
+        String artist = songData[0]['artist'];
+        String url_song = songData[0]['url_song'];
         // Show a success message or perform additional actions if needed
+        PlaylistSongModel playlistSong = PlaylistSongModel(
+          id: appid,
+          playlist_id: playlistId,
+          song_id: songId,
+          title: title,
+          artist: artist,
+          url_song: url_song,
+        );
+
+        songsPlaylist.add(playlistSong);
+
+        await ds.insertPlaylistSong(
+          appid,
+          playlistSong.playlist_id,
+          playlistSong.song_id,
+          playlistSong.title,
+          playlistSong.artist,
+          playlistSong.url_song,
+        );
+
         print('Song added to the playlist successfully.');
       }
     } catch (e) {
@@ -224,10 +237,7 @@ class ListSongState extends State<ListSong> {
                               size: 20,
                             ),
                             onPressed: () {
-                              List<String> songIdsToAdd =
-                                  songs.map((song) => song.id).toList();
-                              // Call the method to add the song to the playlist
-                              addSongToPlaylist(songIdsToAdd, args[0]);
+                              addSongToPlaylist(item.id, args[0]);
                             },
                           ),
                         ),
@@ -240,7 +250,12 @@ class ListSongState extends State<ListSong> {
           }
         },
       ),
-      bottomSheet: AudioControls(audioPlayer: audioPlayer, songs: songs, currentlyPlayingIndex: currentlyPlayingIndex, playNext: playNext, playPrevious: playPrevious),
+      bottomSheet: AudioControls(
+          audioPlayer: audioPlayer,
+          songs: songs,
+          currentlyPlayingIndex: currentlyPlayingIndex,
+          playNext: playNext,
+          playPrevious: playPrevious),
     );
   }
 
@@ -298,19 +313,19 @@ class ListSongState extends State<ListSong> {
     );
   }
 
-  Widget buildPlayPauseButton(int index) {
-    return IconButton(
-      icon: Icon(
-        isPlaying && currentlyPlayingIndex == index
-            ? Icons.pause
-            : Icons.play_arrow,
-        color: Colors.white,
-      ),
-      onPressed: () {
-        handlePlayPause(index);
-      },
-    );
-  }
+  // Widget buildPlayPauseButton(int index) {
+  //   return IconButton(
+  //     icon: Icon(
+  //       isPlaying && currentlyPlayingIndex == index
+  //           ? Icons.pause
+  //           : Icons.play_arrow,
+  //       color: Colors.white,
+  //     ),
+  //     onPressed: () {
+  //       handlePlayPause(index);
+  //     },
+  //   );
+  // }
 
   void handlePlayPause(int index) async {
     if (audioPlayer.playing) {
@@ -351,7 +366,7 @@ class ListSongState extends State<ListSong> {
     });
   }
 
-   void playNext() {
+  void playNext() {
     if (currentlyPlayingIndex < songs.length - 1) {
       currentlyPlayingIndex++;
       playSong(currentlyPlayingIndex);
@@ -365,7 +380,7 @@ class ListSongState extends State<ListSong> {
     }
   }
 
-   void playSong(int index) async {
+  void playSong(int index) async {
     String songUrl = songs[index].url_song;
     String encodedUrl = Uri.encodeFull(songUrl);
 
@@ -418,7 +433,6 @@ class AudioControls extends StatelessWidget {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments as List<String>;
@@ -461,7 +475,7 @@ class AudioControls extends StatelessWidget {
                   Text(
                     currentlyPlayingIndex != -1
                         ? songs[currentlyPlayingIndex].artist
-                        : '',// Ganti dengan nama artis aktual
+                        : '', // Ganti dengan nama artis aktual
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
