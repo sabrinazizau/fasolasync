@@ -63,8 +63,8 @@ class SplashScreen extends StatelessWidget {
       splash: Center(
         child: Image.asset(
           'assets/fasolasync.png',
-          width: 4800,
-          height: 4800,
+          width: 4800.0,
+          height: 4800.0,
           fit: BoxFit.contain,
         ),
       ),
@@ -84,7 +84,7 @@ class SplashScreen extends StatelessWidget {
           }
         },
       ),
-      splashTransition: SplashTransition.scaleTransition,
+      splashTransition: SplashTransition.fadeTransition,
       pageTransitionType: PageTransitionType.fade,
       duration: 2000,
     );

@@ -100,7 +100,7 @@ class _LoginPageState extends State<LoginPage> {
                       'Start listening with a\nFaSoLaSync account.',
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Color(0xFF4A55A2),
+                        color: Colors.white,
                         fontSize: 30,
                         fontFamily: 'Poppins',
                         fontWeight: FontWeight.w700,

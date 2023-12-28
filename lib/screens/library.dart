@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import '../config.dart';
 import '../models/playlist_model.dart';
 import '../restapi.dart';
@@ -75,151 +76,156 @@ class libraryPageState extends State<libraryPage> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      body: Container(
-        padding: EdgeInsets.all(75.0),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFD6E6F2),
-              Color(0xFFA084DC),
-            ],
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Container(
+            padding: EdgeInsets.zero,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Color(0xFFD6E6F2),
+                  Color(0xFFA084DC),
+                ],
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.library_music,
-                          color: Colors.black,
-                          size: 45,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.library_music,
+                              color: Colors.black,
+                              size: 45,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              'YOUR LIBRARY',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: screenWidth > 600 ? 35 : 25,
+                                fontFamily: 'Poppins',
+                                fontWeight: FontWeight.bold,
+                                height: 3,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (isUserLoggedIn())
+                              IconButton(
+                                onPressed: () => Navigator.pushNamed(
+                                    context, 'playlist_form_add'),
+                                icon: const Icon(Icons.add,
+                                    color: Colors.black, size: 35),
+                              ),
+                          ],
                         ),
-                        const SizedBox(width: 5),
+                        SizedBox(height: 5),
+                        searchField(),
+                        SizedBox(height: 15),
                         Text(
-                          'YOUR LIBRARY',
+                          'Playlists',
                           style: TextStyle(
                             color: Colors.black,
-                            fontSize: 35,
+                            fontSize: screenWidth > 600 ? 20 : 15,
                             fontFamily: 'Poppins',
-                            fontWeight: FontWeight.bold,
                             height: 3,
                           ),
                         ),
-                        const Spacer(),
-                        if (isUserLoggedIn())
-                          IconButton(
-                            onPressed: () => Navigator.pushNamed(
-                                context, 'playlist_form_add'),
-                            icon: const Icon(Icons.add,
-                                color: Colors.black, size: 35),
-                          ),
+                        SizedBox(height: 2),
+                        Divider(
+                          color: Colors.black,
+                          thickness: 1.5,
+                          height: 2,
+                        ),
+                        SizedBox(height: 10),
+                        isUserLoggedIn()
+                            ? Expanded(
+                                child: playlist.isEmpty
+                                    ? Center(
+                                        child: Text(
+                                          'No playlists in your library',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 16,
+                                            fontFamily: 'Poppins',
+                                          ),
+                                        ),
+                                      )
+                                    : Padding(
+                                        padding: EdgeInsets.all(20.0),
+                                        child: ListView.builder(
+                                          scrollDirection: Axis.vertical,
+                                          itemCount: playlist.length,
+                                          itemBuilder: (context, index) {
+                                            final item = playlist[index];
+
+                                            return InkWell(
+                                              key: ValueKey(item.id),
+                                              onTap: () {
+                                                Navigator.pushNamed(
+                                                    context, 'playlist_detail',
+                                                    arguments: [
+                                                      item.id
+                                                    ]).then((value) =>
+                                                    selectAllPlaylist());
+                                              },
+                                              child: _buildAlbumCard(
+                                                item.playlist_image ?? '',
+                                                item.playlist_name,
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                              )
+                            : Center(
+                                child: Text(
+                                  'Please log in to view your playlists',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 16,
+                                    fontFamily: 'Poppins',
+                                    fontWeight:
+                                        FontWeight.bold, // Make the text bold
+                                  ),
+                                ),
+                              ),
                       ],
                     ),
-                    SizedBox(height: 5),
-                    searchField(),
-                    SizedBox(height: 15),
-                    Text(
-                      'Playlists',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 20,
-                        fontFamily: 'Poppins',
-                        height: 3,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Divider(
-                      color: Colors.black,
-                      thickness: 1.5,
-                      height: 2,
-                    ),
-                    SizedBox(height: 10),
-                    isUserLoggedIn()
-                        ? Expanded(
-                            child: playlist.isEmpty
-                                ? Center(
-                                    child: Text(
-                                      'No playlists in your library',
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontSize: 16,
-                                        fontFamily: 'Poppins',
-                                      ),
-                                    ),
-                                  )
-                                : Padding(
-                                    padding: EdgeInsets.all(20.0),
-                                    child: ListView.builder(
-                                      scrollDirection: Axis.vertical,
-                                      itemCount: playlist.length,
-                                      itemBuilder: (context, index) {
-                                        final item = playlist[index];
-
-                                        return InkWell(
-                                          key: ValueKey(item.id),
-                                          onTap: () {
-                                            Navigator.pushNamed(
-                                                    context, 'playlist_detail',
-                                                    arguments: [item.id])
-                                                .then((value) =>
-                                                    selectAllPlaylist());
-                                          },
-                                          child: _buildAlbumCard(
-                                            item.playlist_image ?? '',
-                                            item.playlist_name,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                          )
-                        : Center(
-                            child: Text(
-                              'Please log in to view your playlists',
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontFamily: 'Poppins',
-                                fontWeight:
-                                    FontWeight.bold, // Make the text bold
-                              ),
-                            ),
-                          ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
   Widget _buildAlbumCard(String? coverImage, String albumTitle) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    //final screenHeight = MediaQuery.of(context).size.height;
     final textScaleFactor = MediaQuery.of(context).textScaleFactor;
 
     return Card(
       color: Colors.transparent,
       child: Container(
-        width: screenWidth, // Takes up the full width
+        width: screenWidth,
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (coverImage != null && coverImage.isNotEmpty)
               Image.network(
                 fileUri + '$coverImage',
-                height: 150, // Adjust the height as needed
-                width: 150, // Adjust the width as needed
+                height: 150,
+                width: 150,
                 fit: BoxFit.cover,
               )
             else
@@ -235,16 +241,20 @@ class libraryPageState extends State<libraryPage> {
                   ),
                 ),
               ),
+            SizedBox(width: 12),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(45.0),
-                child: Text(
-                  '$albumTitle' + ' • x songs',
-                  style: TextStyle(
-                    fontSize: 16 * textScaleFactor,
-                    fontWeight: FontWeight.bold,
+              child: Column(
+                //padding: const EdgeInsets.all(45.0),
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '$albumTitle' + ' • x songs',
+                    style: TextStyle(
+                      fontSize: 16 * textScaleFactor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ],
