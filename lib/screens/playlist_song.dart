@@ -18,11 +18,13 @@ class PlaylistSongsWidget extends StatefulWidget {
   final String playlistId;
   final AudioPlayer audioPlayer;
   final Function(int) onPlayed;
+  final List<PlaylistSongModel> song;
   const PlaylistSongsWidget(
       {Key? key,
       required this.playlistId,
       required this.audioPlayer,
-      required this.onPlayed})
+      required this.onPlayed,
+      required this.song})
       : super(key: key);
 
   @override
@@ -31,6 +33,7 @@ class PlaylistSongsWidget extends StatefulWidget {
 
 class PlaylistSongState extends State<PlaylistSongsWidget> {
   late AudioPlayer audioPlayer;
+  DataService ds = DataService();
   bool isPlaying = false;
   int currentlyPlayingIndex = -1;
   List<PlaylistSongModel> songs = [];
@@ -43,7 +46,6 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
 
   selectSongsInPlaylist(String playlistId) async {
     List data = [];
-    DataService ds = DataService();
 
     try {
       data = jsonDecode(await ds.selectWhere(
@@ -55,6 +57,37 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
     }
 
     return songs;
+  }
+
+  void removePlaylist(String playlistId) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirmation'),
+          content: Text(
+              'Are you sure you want to remove the song from the playlist?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the alert
+              },
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                // Remove the song from the playlist
+                ds.removeId(token, project, 'playlist_song', appid, playlistId);
+
+                // Close the alert
+                Navigator.of(context).pop();
+              },
+              child: Text('Yes, Remove'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void handlePlayPause(int index) async {
@@ -149,7 +182,16 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
                       },
                     ),
                   ),
-                  // Tambahkan fungsi yang sesuai untuk menangani pemutaran lagu atau aksi lainnya
+                  trailing: IconButton(
+                    icon: Icon(
+                      Icons.delete,
+                      color: Colors.red,
+                    ),
+                    onPressed: () {
+                      // Implement your logic to remove the playlist
+                      removePlaylist(songsInPlaylist[index].id);
+                    },
+                  ),
                 ),
               );
             },
