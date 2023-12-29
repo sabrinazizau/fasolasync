@@ -1,41 +1,99 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
+import '../models/playlist_song_model.dart';
+import '../screens/playlist_song.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../screens/nav_bar.dart';
-import '../models/playlist_model.dart';
-
 import 'package:file_picker/file_picker.dart';
-import '../models/song_model.dart';
+import 'package:http/http.dart' as http;
 
+import '../models/playlist_model.dart';
+import '../models/song_model.dart';
 import '../config.dart';
 import '../restapi.dart';
 
-class PlaylistDetail extends StatefulWidget {
-  const PlaylistDetail({Key? key}) : super(key: key);
+class DetailPlaylist extends StatefulWidget {
+  const DetailPlaylist({Key? key}) : super(key: key);
 
   @override
-  _PlaylistDetailState createState() => _PlaylistDetailState();
+  DetailPlaylistState createState() => DetailPlaylistState();
 }
 
-class _PlaylistDetailState extends State<PlaylistDetail> {
-  User? user = FirebaseAuth.instance.currentUser;
-
-  AudioPlayer audioPlayer = AudioPlayer();
-
-  DataService ds = DataService();
-
-  String playlist_image = '-';
+class DetailPlaylistState extends State<DetailPlaylist> {
+  late AudioPlayer audioPlayer;
   late ValueNotifier<int> _notifier;
 
-  List<PlaylistModel> playlist = [];
-  List<SongsModel> songs = [];
+  bool isPlaying = false;
+  int currentlyPlayingIndex = -1;
+  String playlist_image = '-';
+  DataService ds = DataService();
 
+  List<PlaylistModel> playlist = [];
+  List<PlaylistSongModel> songs = [];
   List<SongsModel> songsPlaylist = [];
+
+  User? user = FirebaseAuth.instance.currentUser;
+
+  Future<List<PlaylistSongModel>> selectSongsInPlaylist(
+      String playlistId) async {
+    List<PlaylistSongModel> data = [];
+
+    try {
+      var response = await ds.selectWhere(
+          token, project, 'playlist_song', appid, 'playlist_id', playlistId);
+      data = jsonDecode(response)
+          .map<PlaylistSongModel>((e) => PlaylistSongModel.fromJson(e))
+          .toList();
+      print(data);
+    } catch (e) {
+      print('error : $e');
+    }
+
+    return data;
+  }
+
+  void handlePlayPause(int index) async {
+    if (audioPlayer.playing) {
+      await audioPlayer.stop();
+      setState(() {
+        isPlaying = false;
+        currentlyPlayingIndex = -1;
+      });
+    } else {
+      String songUrl = songs[index].url_song;
+      String encodedUrl = Uri.encodeFull(songUrl);
+
+      try {
+        await audioPlayer.setUrl(encodedUrl);
+        await audioPlayer.play();
+        setState(() {
+          isPlaying = true;
+          currentlyPlayingIndex = index;
+        });
+
+        audioPlayer.playerStateStream.listen((playerState) {
+          if (playerState.processingState == ProcessingState.completed) {
+            setState(() {
+              isPlaying = false;
+            });
+          }
+        });
+      } catch (e) {
+        print('Error playing the song: $e');
+        setState(() {
+          isPlaying = false;
+          currentlyPlayingIndex = -1;
+        });
+      }
+    }
+    setState(() {
+      currentlyPlayingIndex = index;
+    });
+  }
 
   selectIdPlaylist(String id) async {
     List data = [];
@@ -47,66 +105,26 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
     }
   }
 
-  selectIdSong(String id) async {
-    List data = [];
-    data = jsonDecode(await ds.selectId(token, project, 'songs', appid, id));
-
-    if (data.isNotEmpty) {
-      songs = data.map((e) => SongsModel.fromJson(e)).toList();
-    }
-  }
-
-  selectSong(String playlist_id) async {
-    List data = [];
-
-    data = jsonDecode(await ds.selectWhereIn(
-        token, project, 'playlist', appid, 'song_id', playlist_id));
-
-    if (data.isNotEmpty) {
-      // List<String> songs_ids = data.map((e) => e['song_id'].toString()).toList();
-      List<String> song_ids = List<String>.from(data.first['song_ids'] ?? []);
-
-      List<Map<String, dynamic>> songsData = [];
-      // List<List> songsData = [];
-
-      for (String song_id in song_ids) {
-        Map<String, dynamic> song = jsonDecode(await ds.selectWhereIn(
-            token, project, 'songs', appid, '_id', song_id));
-        songsData.add(song);
-      }
-
-      if (songsData.isNotEmpty) {
-        songsPlaylist = songsData.map((e) => SongsModel.fromJson(e)).toList();
-      }
-    }
-  }
-
   Future reloadDataPlaylist(dynamic value) async {
-    setState(() {
-      final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
 
-      selectIdPlaylist(args[0]);
-    });
+    await selectIdPlaylist(args[0]);
   }
 
   Future reloadDataSong(dynamic value) async {
     setState(() {
       final args = ModalRoute.of(context)?.settings.arguments as List<String>;
 
-      selectIdSong(args[0]);
+      selectSongsInPlaylist(args[0]);
     });
   }
 
-  Future reloadDataSongInPlaylist(dynamic value) async {
-    setState(() {
-      final args = ModalRoute.of(context)?.settings.arguments as List<String>;
-
-      selectSong(args[0]);
-    });
+  @override
+  void initState() {
+    super.initState();
+    _notifier = ValueNotifier<int>(0);
+    audioPlayer = AudioPlayer();
   }
-
-  File? image;
-  String? imagePlaylist;
 
   Future pickImage(String id) async {
     try {
@@ -133,64 +151,13 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
     }
   }
 
-  int currentlyPlayingIndex = -1;
-  bool isPlaying = false;
-
-  void playPause(int index) async {
-    if (currentlyPlayingIndex == index) {
-      if (isPlaying) {
-        audioPlayer.pause();
-        setState(() {
-          isPlaying = false;
-        });
-      } else {
-        audioPlayer.resume();
-        setState(() {
-          isPlaying = true;
-        });
-      }
-    } else {
-      String songUrl = songsPlaylist[index].url_song;
-      await audioPlayer.play(UrlSource(songUrl));
-
-      setState(() {
-        currentlyPlayingIndex = index;
-        isPlaying = true;
-      });
-    }
-  }
-
-  void stop() {
-    audioPlayer.stop();
-    setState(() {
-      currentlyPlayingIndex = -1;
-      isPlaying = false;
-    });
-  }
-
-  @override
-  void initState() {
-    // Init the value notifier
-    _notifier = ValueNotifier<int>(0);
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
-        ),
-        title: const Text(
-          'Playlist Detail',
-          style: TextStyle(color: Color(0xFF4A55A2)),
-        ),
-        backgroundColor: Colors.white,
-      ),
       body: FutureBuilder<dynamic>(
         future: selectIdPlaylist(args[0]),
         builder: (context, AsyncSnapshot<dynamic> snapshot) {
@@ -213,325 +180,323 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
                   return Text('${snapshot.error}',
                       style: const TextStyle(color: Colors.red));
                 } else {
-                  return ListView(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          padding: EdgeInsets.all(80.0),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Color(0xFFD6E6F2),
-                                Color(0xFFA084DC),
-                              ],
-                            ),
-                          ),
-                          width: MediaQuery.of(context).size.width,
-                          height: MediaQuery.of(context).size.height * 0.70,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Row(
+                  return FutureBuilder<List<PlaylistSongModel>>(
+                    future: selectSongsInPlaylist(args[0]),
+                    builder: (context,
+                        AsyncSnapshot<List<PlaylistSongModel>> snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else {
+                        List<PlaylistSongModel> song = snapshot.data!;
+                        return ListView(
+                          children: [
+                            Container(
+                              decoration: const BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Color(0xFFD6E6F2),
+                                    Color(0xFFA084DC),
+                                  ],
+                                ),
+                              ),
+                              width: screenWidth,
+                              height: screenHeight * 0.60,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Container(
-                                    child: Stack(
-                                      alignment: Alignment.bottomRight,
-                                      children: [
-                                        ValueListenableBuilder(
-                                          valueListenable: _notifier,
-                                          builder: (context, value, child) =>
-                                              playlist_image == ''
-                                                  ? const Align(
-                                                      alignment:
-                                                          Alignment.bottomLeft,
-                                                      child: Icon(
-                                                        Icons.library_music,
-                                                        color: Colors.black,
-                                                        size: 300,
-                                                      ),
-                                                    )
-                                                  : Align(
-                                                      alignment:
-                                                          Alignment.bottomLeft,
-                                                      child: FittedBox(
-                                                        fit: BoxFit.cover,
-                                                        child: Image.network(
-                                                          fileUri +
-                                                              playlist_image,
-                                                          width: 300,
-                                                          height: 300,
+                                  Row(
+                                    children: [
+                                      Container(
+                                        child: Stack(
+                                          alignment: Alignment.bottomRight,
+                                          children: [
+                                            ValueListenableBuilder(
+                                              valueListenable: _notifier,
+                                              builder: (context, value,
+                                                      child) =>
+                                                  playlist_image == ''
+                                                      ? const Align(
+                                                          alignment: Alignment
+                                                              .bottomLeft,
+                                                          child: Icon(
+                                                            Icons.library_music,
+                                                            color: Colors.black,
+                                                            size: 300,
+                                                          ),
+                                                        )
+                                                      : Align(
+                                                          alignment: Alignment
+                                                              .bottomLeft,
+                                                          child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    left: 64.0),
+                                                            child: FittedBox(
+                                                              fit: BoxFit.cover,
+                                                              child:
+                                                                  Image.network(
+                                                                fileUri +
+                                                                    playlist_image,
+                                                                width: 300,
+                                                                height: 300,
+                                                              ),
+                                                            ),
+                                                          ),
                                                         ),
+                                            ),
+                                            InkWell(
+                                              onTap: () => pickImage(args[0]),
+                                              child: Align(
+                                                child: Container(
+                                                  height: 30.00,
+                                                  width: 30.00,
+                                                  margin: const EdgeInsets.only(
+                                                    right: 10.0,
+                                                    bottom: 10.0,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.white70,
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            5.00),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.camera_alt_outlined,
+                                                    size: 20,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      SizedBox(width: 20),
+                                      Expanded(
+                                        child: Container(
+                                          margin: EdgeInsets.only(top: 80.0),
+                                          alignment: Alignment.bottomLeft,
+                                          child: Wrap(
+                                            spacing: 8.0,
+                                            children: [
+                                              Text(
+                                                'Playlist',
+                                                style: TextStyle(
+                                                    color: Colors.black,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 18),
+                                              ),
+                                              SizedBox(
+                                                height: 5,
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Flexible(
+                                                    child: Text(
+                                                      playlist[0].playlist_name,
+                                                      style: TextStyle(
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 80),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              SizedBox(height: 10),
+                                              Row(
+                                                children: [
+                                                  Flexible(
+                                                    child: Text(
+                                                      playlist[0].playlist_desc,
+                                                      style: TextStyle(
+                                                        color: Colors.black,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize:
+                                                            18, // Atur ukuran font sesuai kebutuhan
                                                       ),
                                                     ),
+                                                  ),
+                                                ],
+                                              ),
+                                              Row(
+                                                children: [
+                                                  Text(
+                                                    '${user!.displayName} • ${song.length} songs ',
+                                                    style: TextStyle(
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize:
+                                                          18, // Atur ukuran font sesuai kebutuhan
+                                                    ),
+                                                  ),
+                                                  // Text(
+                                                  //   '${user!.displayName} • No songs in the playlist ',
+                                                  //   style: TextStyle(
+                                                  //     color: Colors.black,
+                                                  //     fontWeight:
+                                                  //         FontWeight.bold,
+                                                  //     fontSize:
+                                                  //         18, // Atur ukuran font sesuai kebutuhan
+                                                  //   ),
+                                                  // ),
+                                                  SizedBox(height: 5),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                        InkWell(
-                                          onTap: () => pickImage(args[0]),
-                                          child: Align(
-                                            child: Container(
-                                              height: 30.00,
-                                              width: 30.00,
-                                              margin: const EdgeInsets.only(
-                                                right: 10.0,
-                                                bottom: 10.0,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white70,
-                                                borderRadius:
-                                                    BorderRadius.circular(5.00),
-                                              ),
-                                              child: const Icon(
-                                                Icons.camera_alt_outlined,
-                                                size: 20,
-                                                color: Colors.black,
-                                              ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              decoration: ShapeDecoration(
+                                shape: RoundedRectangleBorder(
+                                  side: BorderSide(
+                                    width: 2,
+                                    strokeAlign: BorderSide.strokeAlignCenter,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.all(16.0),
+                                color: Color(0xFFA084DC),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(width: 80),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment
+                                          .end, // Align the children at the end of the row
+                                      children: [
+                                        Spacer(),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.add,
+                                            color: Colors.black,
+                                            size: 30,
+                                          ),
+                                          onPressed: () {
+                                            Navigator.pushNamed(
+                                              context,
+                                              'list_song',
+                                              arguments: [playlist[0].id],
+                                            ).then(reloadDataPlaylist);
+                                          },
+                                        ), // Use Spacer to push icons to the right
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.edit,
+                                            color: Colors.black,
+                                            size: 30,
+                                          ),
+                                          onPressed: () {
+                                            Navigator.pushNamed(
+                                              context,
+                                              'playlist_form_edit',
+                                              arguments: [playlist[0].id],
+                                            ).then(reloadDataPlaylist);
+                                          },
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              right: 20.0),
+                                          child: GestureDetector(
+                                            onTap: () {
+                                              showDialog(
+                                                context: context,
+                                                barrierDismissible: false,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return AlertDialog(
+                                                    title:
+                                                        const Text("Warning"),
+                                                    content: const Text(
+                                                        "Remove this data?"),
+                                                    actions: <Widget>[
+                                                      TextButton(
+                                                        child: const Text(
+                                                            "CANCEL"),
+                                                        onPressed: () {
+                                                          Navigator.of(context)
+                                                              .pop();
+                                                        },
+                                                      ),
+                                                      TextButton(
+                                                        child: const Text(
+                                                            "REMOVE"),
+                                                        onPressed: () async {
+                                                          bool response =
+                                                              await ds.removeId(
+                                                            token,
+                                                            project,
+                                                            'playlist',
+                                                            appid,
+                                                            args[0],
+                                                          );
+
+                                                          Navigator.of(context)
+                                                              .pop();
+
+                                                          if (response) {
+                                                            Navigator.pop(
+                                                                context, true);
+                                                          }
+                                                        },
+                                                      )
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                            },
+                                            child: Icon(
+                                              Icons.delete_outline,
+                                              size: 35.0,
+                                              color: Colors.black,
                                             ),
                                           ),
                                         ),
                                       ],
                                     ),
-                                  ),
-                                  SizedBox(width: 20),
-                                  Expanded(
-                                    child: Container(
-                                      margin: EdgeInsets.only(top: 80.0),
-                                      alignment: Alignment.bottomLeft,
-                                      child: Wrap(
-                                        spacing: 8.0,
-                                        children: [
-                                          Text(
-                                            'Playlist',
-                                            style: TextStyle(
-                                                color: Colors.black,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 18),
-                                          ),
-                                          SizedBox(
-                                            height: 5,
-                                          ),
-                                          Row(
-                                            children: [
-                                              Flexible(
-                                                child: Text(
-                                                  playlist[0].playlist_name,
-                                                  style: TextStyle(
-                                                      color: Colors.black,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 80),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          SizedBox(height: 10),
-                                          Row(
-                                            children: [
-                                              Flexible(
-                                                child: Text(
-                                                  playlist[0].playlist_desc,
-                                                  style: TextStyle(
-                                                    color: Colors.black,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize:
-                                                        18, // Atur ukuran font sesuai kebutuhan
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            children: [
-                                              Text(
-                                                '${user!.displayName} • 64 songs ',
-                                                style: TextStyle(
-                                                  color: Colors.black,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize:
-                                                      18, // Atur ukuran font sesuai kebutuhan
-                                                ),
-                                              ),
-                                              SizedBox(height: 5),
-                                            ],
-                                          ),
-                                        ],
+                                    SizedBox(height: 20),
+                                    if (song.isNotEmpty)
+                                      PlaylistSongsWidget(
+                                        playlistId: args[0],
+                                        audioPlayer: audioPlayer,
+                                        onPlayed: handlePlayPause,
+                                        song: song,
+                                      )
+                                    else
+                                      AdditionalContentWidget(
+                                        onPressed: () {
+                                          Navigator.pushNamed(
+                                                  context, 'list_song',
+                                                  arguments: [playlist[0].id])
+                                              .then(reloadDataPlaylist);
+                                        },
                                       ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Container(
-                        decoration: ShapeDecoration(
-                          shape: RoundedRectangleBorder(
-                            side: BorderSide(
-                              width: 2,
-                              strokeAlign: BorderSide.strokeAlignCenter,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Row(
-                      //   children: [
-                      //     Container(
-                      //       width: 0,
-                      //       height: 60,
-                      //       decoration: BoxDecoration(
-                      //         shape: BoxShape.circle,
-                      //         color: Colors.blue[900],
-                      //       ),
-                      //       child: IconButton(
-                      //         icon: Icon(
-                      //           Icons.play_arrow,
-                      //           color: Colors.white,
-                      //           size: 40,
-                      //         ),
-                      //         onPressed: () {},
-                      //       ),
-                      //     ),
-
-                      Expanded(
-                        child: Container(
-                          padding: const EdgeInsets.all(16.0),
-                          color: Color(0xFFA084DC),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(width: 80),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment
-                                    .end, // Align the children at the end of the row
-                                children: [
-                                  Spacer(), // Use Spacer to push icons to the right
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.edit,
-                                      color: Colors.black,
-                                      size: 30,
-                                    ),
-                                    onPressed: () {
-                                      Navigator.pushNamed(
-                                        context,
-                                        'playlist_form_edit',
-                                        arguments: [playlist[0].id],
-                                      ).then(reloadDataPlaylist);
-                                    },
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 20.0),
-                                    child: GestureDetector(
-                                      onTap: () {
-                                        showDialog(
-                                          context: context,
-                                          barrierDismissible: false,
-                                          builder: (BuildContext context) {
-                                            return AlertDialog(
-                                              title: const Text("Warning"),
-                                              content: const Text(
-                                                  "Remove this data?"),
-                                              actions: <Widget>[
-                                                TextButton(
-                                                  child: const Text("CANCEL"),
-                                                  onPressed: () {
-                                                    Navigator.of(context).pop();
-                                                  },
-                                                ),
-                                                TextButton(
-                                                  child: const Text("REMOVE"),
-                                                  onPressed: () async {
-                                                    bool response =
-                                                        await ds.removeId(
-                                                      token,
-                                                      project,
-                                                      'playlist',
-                                                      appid,
-                                                      args[0],
-                                                    );
-
-                                                    Navigator.of(context).pop();
-
-                                                    if (response) {
-                                                      Navigator.pop(
-                                                          context, true);
-                                                    }
-                                                  },
-                                                )
-                                              ],
-                                            );
-                                          },
-                                        );
-                                      },
-                                      child: Icon(
-                                        Icons.delete_outline,
-                                        size: 35.0,
-                                        color: Colors.black,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 120),
-                              Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      "Let's start building your playlist",
-                                      style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                    SizedBox(height: 10),
-                                    ElevatedButton(
-                                      onPressed: () {
-                                        Navigator.pushNamed(
-                                                context, 'list_song',
-                                                arguments: [playlist[0].id])
-                                            .then(reloadDataPlaylist);
-                                      },
-                                      child: Text("Add to this playlist"),
-                                    ),
-                                    SizedBox(height: 100),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      Flexible(
-                        child: ListView.builder(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          itemCount: songsPlaylist.length,
-                          itemBuilder: (context, index) {
-                            return ListTile(
-                              title: Text(songsPlaylist[index].title),
-                              subtitle: Text(songsPlaylist[index].artist),
-                              trailing: IconButton(
-                                onPressed: () {
-                                  playPause(index);
-                                },
-                                icon: Icon(
-                                  currentlyPlayingIndex == index && isPlaying
-                                      ? Icons.pause
-                                      : Icons.play_arrow,
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                            ),
+                          ],
+                        );
+                      }
+                    },
                   );
                 }
               }
@@ -541,3 +506,44 @@ class _PlaylistDetailState extends State<PlaylistDetail> {
     );
   }
 }
+
+class AdditionalContentWidget extends StatelessWidget {
+  final VoidCallback onPressed;
+
+  const AdditionalContentWidget({
+    Key? key,
+    required this.onPressed,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(64.0),
+      color: Color(0xFFA084DC),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              "Let's start building your playlist",
+              style: TextStyle(
+                color: Colors.black,
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+            SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: onPressed,
+              child: Text("Add to this playlist"),
+            ),
+            SizedBox(height: 100),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// }
