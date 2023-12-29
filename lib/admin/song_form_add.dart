@@ -61,7 +61,7 @@ class _SongFormAddState extends State<SongFormAdd> {
           icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
         ),
         title: const Text(
-          'Playlist Form Add',
+          'Song Form Add',
           style: TextStyle(color: Color(0xFF4A55A2)),
         ),
         backgroundColor: Colors.white,
@@ -89,6 +89,7 @@ class _SongFormAddState extends State<SongFormAdd> {
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Title',
+                  prefixIcon: Icon(Icons.music_note),
                 ),
               ),
             ),
@@ -100,6 +101,7 @@ class _SongFormAddState extends State<SongFormAdd> {
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Artist',
+                  prefixIcon: Icon(Icons.person),
                 ),
               ),
             ),
@@ -119,6 +121,9 @@ class _SongFormAddState extends State<SongFormAdd> {
               child: ElevatedButton(
                 onPressed: openFileExplorer,
                 child: Text('Choose File'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Color(0xFF4A55A2),
+                ),
               ),
             ),
             if (url_song != null)
