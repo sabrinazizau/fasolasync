@@ -1,8 +1,6 @@
-import 'package:fasolasync/screens/detail_playlist.dart';
-import 'package:fasolasync/screens/detailz.dart';
+import 'package:fasolasync/screens/playlist_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:fasolasync/screens/library.dart';
-import '../services/playlist_operations.dart';
 // import '/screens/library.dart';
 
 class DetailPlayerScreen extends StatefulWidget {
@@ -69,7 +67,7 @@ class DetailPlayerScreenState extends State<DetailPlayerScreen> {
   Widget _buildContent() {
     switch (_selectedIndex) {
       case 0:
-        return DetailPlaylist();
+        return PlaylistDetail();
       case 1:
         return libraryPage();
       default:

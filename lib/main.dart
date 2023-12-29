@@ -1,3 +1,4 @@
+import 'package:fasolasync/screens/detail_nav.dart';
 import 'package:fasolasync/screens/list_song.dart';
 import 'package:fasolasync/screens/playlist_form_edit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,11 +47,12 @@ class MyApp extends StatelessWidget {
         'register_page': (context) => const RegisterPage(),
         'playlist_form_add': (context) => const PlaylistFormAdd(),
         'playlist_operations': (context) => const HomeContent(),
+        'detail_nav': (context) => const DetailPlayerScreen(),
         'playlist_detail': (context) => const PlaylistDetail(),
         'playlist_list': (context) => const PlaylistList(),
         'library': (context) => const libraryPage(),
         'playlist_form_edit': (context) => const PlaylistFormEdit(),
-        'list_song' : (context) => const ListSong(),
+        'list_song': (context) => const ListSong(),
       },
     );
   }

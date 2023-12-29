@@ -6,7 +6,6 @@ import '../models/song_model.dart';
 import '../config.dart';
 import '../models/playlist_model.dart';
 import '../restapi.dart';
-import 'playlist_detail.dart';
 
 class ListSong extends StatefulWidget {
   const ListSong({Key? key}) : super(key: key);
@@ -98,7 +97,7 @@ class ListSongState extends State<ListSong> {
         String title = songData[0]['title'];
         String artist = songData[0]['artist'];
         String url_song = songData[0]['url_song'];
-        // Show a success message or perform additional actions if needed
+
         PlaylistSongModel playlistSong = PlaylistSongModel(
           id: appid,
           playlist_id: playlistId,
@@ -119,12 +118,38 @@ class ListSongState extends State<ListSong> {
           playlistSong.url_song,
         );
 
+        showSuccessDialog();
+        
         print('Song added to the playlist successfully.');
       }
     } catch (e) {
       // Handle errors, display an error message, or log the error
       print('Error adding song to the playlist: $e');
     }
+  }
+
+  void showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Success'),
+          content: Text('Song added to the playlist successfully.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+
+    Future.delayed(Duration(seconds: 2), () {
+      Navigator.of(context).pop();
+    });
   }
 
   @override
@@ -313,20 +338,6 @@ class ListSongState extends State<ListSong> {
     );
   }
 
-  // Widget buildPlayPauseButton(int index) {
-  //   return IconButton(
-  //     icon: Icon(
-  //       isPlaying && currentlyPlayingIndex == index
-  //           ? Icons.pause
-  //           : Icons.play_arrow,
-  //       color: Colors.white,
-  //     ),
-  //     onPressed: () {
-  //       handlePlayPause(index);
-  //     },
-  //   );
-  // }
-
   void handlePlayPause(int index) async {
     if (audioPlayer.playing) {
       await audioPlayer.stop();
@@ -435,7 +446,6 @@ class AudioControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -451,7 +461,6 @@ class AudioControls extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                // Tambahkan logika untuk menampilkan gambar album atau ikon lainnya
                 backgroundColor: Colors.blue[900],
                 radius: 25,
                 child: Icon(
@@ -468,14 +477,14 @@ class AudioControls extends StatelessWidget {
                   Text(
                     currentlyPlayingIndex != -1
                         ? songs[currentlyPlayingIndex].title
-                        : '', // Ganti dengan nama lagu aktual
+                        : '', 
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4),
                   Text(
                     currentlyPlayingIndex != -1
                         ? songs[currentlyPlayingIndex].artist
-                        : '', // Ganti dengan nama artis aktual
+                        : '', 
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],
