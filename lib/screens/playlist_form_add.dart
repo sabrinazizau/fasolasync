@@ -61,6 +61,7 @@ class _PlaylistFormAddState extends State<PlaylistFormAdd> {
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Playlist Name',
+                  prefixIcon: Icon(Icons.music_note),
                 ),
               ),
             ),
@@ -72,6 +73,7 @@ class _PlaylistFormAddState extends State<PlaylistFormAdd> {
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: 'Description',
+                  prefixIcon: Icon(Icons.description),
                 ),
               ),
             ),
@@ -83,7 +85,7 @@ class _PlaylistFormAddState extends State<PlaylistFormAdd> {
                 height: 45,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue[900],
+                    backgroundColor: Color(0xFF4A55A2),
                     elevation: 0,
                   ),
                   onPressed: () async {

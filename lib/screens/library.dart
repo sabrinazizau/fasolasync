@@ -103,14 +103,14 @@ class libraryPageState extends State<libraryPage> {
                             Icon(
                               Icons.library_music,
                               color: Colors.black,
-                              size: 45,
+                              size: screenWidth > 600 ? 45 : 20,
                             ),
                             const SizedBox(width: 5),
                             Text(
                               'YOUR LIBRARY',
                               style: TextStyle(
                                 color: Colors.black,
-                                fontSize: screenWidth > 600 ? 35 : 25,
+                                fontSize: screenWidth > 600 ? 35 : 20,
                                 fontFamily: 'Poppins',
                                 fontWeight: FontWeight.bold,
                                 height: 3,
@@ -122,7 +122,7 @@ class libraryPageState extends State<libraryPage> {
                                 onPressed: () => Navigator.pushNamed(
                                     context, 'playlist_form_add'),
                                 icon: const Icon(Icons.add,
-                                    color: Colors.black, size: 35),
+                                    color: Colors.black, size: 30),
                               ),
                           ],
                         ),
