@@ -1,6 +1,9 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fasolasync/screens/nav_bar.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +11,7 @@ import '../models/Song_model.dart';
 
 import '../restapi.dart';
 import '../config.dart';
+import '../screens/home.dart';
 
 class SongFormAdd extends StatefulWidget {
   const SongFormAdd({Key? key}) : super(key: key);
@@ -26,6 +30,30 @@ class _SongFormAddState extends State<SongFormAdd> {
   late ValueNotifier<int> _notifier;
 
   DataService ds = DataService();
+
+  @override
+  void initState() {
+    super.initState();
+    checkAdminRole();
+  }
+
+  Future<void> checkAdminRole() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      DocumentSnapshot<Map<String, dynamic>> userData = await FirebaseFirestore
+          .instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      String userRole = userData['role'];
+
+      if (userRole != 'admin') {
+        Navigator.pop(context);
+      }
+    }
+  }
 
   Future<void> openFileExplorer() async {
     try {
@@ -51,12 +79,46 @@ class _SongFormAddState extends State<SongFormAdd> {
     }
   }
 
+  Future<void> showSuccessDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success'),
+          content: const Text('Song submitted successfully!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text("Song Form Add"),
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            onPressed: () {
+              FirebaseAuth.instance.signOut();
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => NavBarDemo(user: null),
+                ),
+              );
+            },
+            icon: Icon(Icons.logout),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -128,7 +190,12 @@ class _SongFormAddState extends State<SongFormAdd> {
                         response.map((e) => SongsModel.fromJson(e)).toList();
 
                     if (Songs.length == 1) {
-                      Navigator.pop(context, true);
+                      await showSuccessDialog();
+                      setState(() {
+                        title.text = '';
+                        artist.text = '';
+                        url_song = '';
+                      });
                     } else {
                       if (kDebugMode) {
                         print(response);
