@@ -1,16 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:fasolasync/models/playlistSong_model.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:file_picker/file_picker.dart';
 
-import '../models/playlist_model.dart';
-import '../models/song_model.dart';
 import '../config.dart';
 import '../restapi.dart';
 
@@ -19,12 +13,15 @@ class PlaylistSongsWidget extends StatefulWidget {
   final AudioPlayer audioPlayer;
   final Function(int) onPlayed;
   final List<PlaylistSongModel> song;
+  final VoidCallback onAllDataDeleted;
+
   const PlaylistSongsWidget(
       {Key? key,
       required this.playlistId,
       required this.audioPlayer,
       required this.onPlayed,
-      required this.song})
+      required this.song,
+      required this.onAllDataDeleted})
       : super(key: key);
 
   @override
@@ -59,6 +56,20 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
     return songs;
   }
 
+  Future<void> reloadSong() async {
+  final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+
+  try {
+    List<PlaylistSongModel> updatedSongs = await selectSongsInPlaylist(args[0]);
+
+    setState(() {
+      songs = updatedSongs;
+    });
+  } catch (e) {
+    print('Error reloading songs: $e');
+  }
+}
+
   void removePlaylist(String playlistId) {
     showDialog(
       context: context,
@@ -75,10 +86,13 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
               child: Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
+              onPressed: () async{
                 // Remove the song from the playlist
                 ds.removeId(token, project, 'playlist_song', appid, playlistId);
 
+                await reloadSong();
+
+                widget.onAllDataDeleted();
                 // Close the alert
                 Navigator.of(context).pop();
               },
@@ -143,7 +157,7 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
           return Text('Error: ${snapshot.error}');
         } else {
           // Menampilkan lagu-lagu dalam playlist
-          List<PlaylistSongModel> songsInPlaylist = snapshot.data;
+          List<PlaylistSongModel> songsInPlaylist = songs;
           return ListView.builder(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),

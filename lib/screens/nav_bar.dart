@@ -80,26 +80,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
                         color: Color(0xFF4A55A2),
                       ),
                     ),
-
-                    // onTap: () {
-                    //   Navigator.push(
-                    //     context,
-                    //     MaterialPageRoute(
-                    //         builder: (context) => ProfileScreen()),
-                    //   );
-                    // },
                   ),
-                  // SizedBox(
-                  //   height: 40,
-                  //   width: double.infinity,
-                  //   child: RoundedButton(
-                  //     colour: Colors.white,
-                  //     title: 'Add Playlist',
-                  //     onPressed: () {
-                  //       Navigator.pushNamed(context, 'playlist_form_add');
-                  //     },
-                  //   ),
-                  // ),
 
                   RoundedButton(
                       colour: Color(0xFFBFACE2),
@@ -157,6 +138,9 @@ class _NavBarDemoState extends State<NavBarDemo> {
   void _handleLogout() async {
     try {
       await FirebaseAuth.instance.signOut();
+      Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => NavBarDemo(user: null)),
+    );
     } catch (e) {
       print("Error during logout: $e");
     }
@@ -167,6 +151,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
     print("Building Logged In Appbar");
     setState(() {});
     return AppBar(
+      automaticallyImplyLeading: false,
       leading: Builder(builder: (BuildContext context) {
         return IconButton(
           icon: const Icon(
@@ -190,6 +175,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
   AppBar _buildLoggedOutAppBar() {
     print("Building Logged Out Appbar");
     return AppBar(
+      automaticallyImplyLeading: false,
       //iconTheme: IconThemeData(color: Colors.black),
       title: Text(
         'FaSoLaSync',
@@ -201,7 +187,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pushReplacement(
+            Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => LoginPage()));
           },
           child: Text(
@@ -211,7 +197,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
         ),
         TextButton(
           onPressed: () {
-            Navigator.of(context).pushReplacement(
+            Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => RegisterPage()));
           },
           child: Text(

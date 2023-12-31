@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fasolasync/admin/song_form_add.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -36,6 +38,8 @@ class _LoginPageState extends State<LoginPage> {
   bool _isProcessing = false;
   bool _obscureText = true;
 
+  String role = '';
+
   // @override
   // void dispose() {
   //   _emailTextController.dispose();
@@ -51,13 +55,34 @@ class _LoginPageState extends State<LoginPage> {
     User? user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          //builder: (context) => MusicPlayerScreen(),
-          builder: (context) => NavBarDemo(user: user),
-        ),
-      );
+      DocumentSnapshot<Map<String, dynamic>> userData = await FirebaseFirestore
+          .instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      if (userData.exists) {
+        String email = userData['email'];
+        role = userData['role'];
+
+        print('Email: $email');
+        print('Role: $role');
+
+        if (role == 'admin') {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) => SongFormAdd(),
+            ),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              //builder: (context) => MusicPlayerScreen(),
+              builder: (context) => NavBarDemo(user: user),
+            ),
+          );
+        }
+      }
     }
 
     return firebaseApp;
@@ -199,17 +224,6 @@ class _LoginPageState extends State<LoginPage> {
                                             setState(() {
                                               _isProcessing = false;
                                             });
-
-                                            if (user != null) {
-                                              // ignore: use_build_context_synchronously
-                                              Navigator.of(context)
-                                                  .pushReplacement(
-                                                MaterialPageRoute(
-                                                  builder: (context) =>
-                                                      MusicPlayerScreen(),
-                                                ),
-                                              );
-                                            }
                                           }
                                         },
                                         style: ElevatedButton.styleFrom(
@@ -273,5 +287,14 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+  @override
+  void dispose() {
+    // Membersihkan sumber daya ketika widget dihapus
+    _emailTextController.dispose();
+    _passwordTextController.dispose();
+    _focusEmail.dispose();
+    _focusPassword.dispose();
+    super.dispose();
   }
 }

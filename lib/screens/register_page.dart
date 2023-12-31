@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -34,6 +35,18 @@ class RegisterPageState extends State<RegisterPage> {
   bool isProcessing = false;
   bool _obscureText = true;
 
+  Future<void> _registerInUsersCollection({
+    required String userId,
+    required String role,
+    required String email,
+  }) async {
+    await FirebaseFirestore.instance.collection('users').doc(userId).set({
+      'email': email,
+      'role': role,
+      // Tambahkan data lain sesuai kebutuhan
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -47,9 +60,8 @@ class RegisterPageState extends State<RegisterPage> {
             leading: IconButton(
               onPressed: () {
                 Navigator.pop(context);
-              }, 
+              },
               icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
-              
             ),
             title: const Text(
               'Register',
@@ -196,6 +208,13 @@ class RegisterPageState extends State<RegisterPage> {
                                                 });
 
                                                 if (user != null) {
+                                                  await _registerInUsersCollection(
+                                                    userId: user.uid,
+                                                    role: 'user',
+                                                    email: emailTextController
+                                                        .text,
+                                                  );
+
                                                   Navigator.of(context)
                                                       .pushAndRemoveUntil(
                                                     MaterialPageRoute(
@@ -208,11 +227,13 @@ class RegisterPageState extends State<RegisterPage> {
                                               }
                                             },
                                             style: ElevatedButton.styleFrom(
-                                                primary: Colors.white,
-                                                onPrimary: Color(0xFF4A55A2),
-                                                padding: EdgeInsets.symmetric(
-                                                    vertical: 10.0,
-                                                    horizontal: 20.0)),
+                                              primary: Colors.white,
+                                              onPrimary: Color(0xFF4A55A2),
+                                              padding: EdgeInsets.symmetric(
+                                                vertical: 10.0,
+                                                horizontal: 20.0,
+                                              ),
+                                            ),
                                             child: const Text(
                                               'Register',
                                               style: TextStyle(

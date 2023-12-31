@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/playlist_model.dart';
 import '../config.dart';
 import '../restapi.dart';
+import '../screens/login_page.dart';
+import '../screens/register_page.dart';
 
 class HomeContent extends StatefulWidget {
   const HomeContent({Key? key}) : super(key: key);
@@ -198,7 +200,12 @@ class _HomeContentState extends State<HomeContent> {
               onPressed: () {
                 Navigator.pop(context); // Close the login popup
                 // Navigate to the login page
-                Navigator.pushNamed(context, 'login_page');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LoginPage(),
+                  ),
+                );
               },
               child: Text("LOGIN"),
             ),
@@ -206,7 +213,12 @@ class _HomeContentState extends State<HomeContent> {
               onPressed: () {
                 Navigator.pop(context); // Close the login popup
                 // Navigate to the register page
-                Navigator.pushNamed(context, 'register_page');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => RegisterPage(),
+                  ),
+                );
               },
               child: Text('REGISTER'),
             ),

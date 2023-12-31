@@ -22,6 +22,7 @@ class ListSongState extends State<ListSong> {
   final searchKeyword = TextEditingController();
   bool searchStatus = false;
   DataService ds = DataService();
+
   List data = [];
   List<SongsModel> songs = [];
   List<PlaylistModel> playlist = [];
@@ -32,6 +33,17 @@ class ListSongState extends State<ListSong> {
   selectAllSong() async {
     data = jsonDecode(await ds.selectAll(token, project, 'songs', appid));
     songs = data.map((e) => SongsModel.fromJson(e)).toList();
+
+    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+
+    // Fetch the songs in the playlist
+    List<PlaylistSongModel> songsInPlaylist =
+        await selectSongsInPlaylist(args[0]);
+
+    // Exclude songs in the playlist from the list
+    songs.removeWhere((song) =>
+        songsInPlaylist.any((playlistSong) => playlistSong.song_id == song.id));
+
     setState(() {
       songs = songs;
     });
@@ -45,12 +57,40 @@ class ListSongState extends State<ListSong> {
     }
   }
 
-  selectIdSong(String id) async {
+  selectSongsInPlaylist(String playlistId) async {
     List data = [];
-    data = jsonDecode(await ds.selectId(token, project, 'songs', appid, id));
-    if (data.isNotEmpty) {
-      songs = data.map((e) => SongsModel.fromJson(e)).toList();
+
+    try {
+      data = jsonDecode(await ds.selectWhere(
+          token, project, 'playlist_song', appid, 'playlist_id', playlistId));
+      songsPlaylist = data.map((e) => PlaylistSongModel.fromJson(e)).toList();
+      print(songsPlaylist);
+    } catch (e) {
+      print('error : $e');
     }
+
+    return songsPlaylist;
+  }
+
+  Future<void> reloadSong() async {
+    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+
+    try {
+      List<PlaylistSongModel> updatedSongs =
+          await selectSongsInPlaylist(args[0]);
+
+      setState(() {
+        songsPlaylist = updatedSongs;
+      });
+    } catch (e) {
+      print('Error reloading songs: $e');
+    }
+  }
+
+  Future<void> removeSong(String songId) async {
+    setState(() {
+      songs.removeWhere((song) => song.id == songId);
+    });
   }
 
   void filterSong(String enteredKeyword) {
@@ -86,14 +126,10 @@ class ListSongState extends State<ListSong> {
 
   Future<void> addSongToPlaylist(String songId, String playlistId) async {
     try {
-      // Fetch the existing playlist data
-      List playlistData = jsonDecode(
-          await ds.selectId(token, project, 'playlist', appid, playlistId));
-
       List songData =
           jsonDecode(await ds.selectId(token, project, 'songs', appid, songId));
 
-      if (playlistData.isNotEmpty && songData.isNotEmpty) {
+      if (playlist.isNotEmpty && songData.isNotEmpty) {
         String title = songData[0]['title'];
         String artist = songData[0]['artist'];
         String url_song = songData[0]['url_song'];
@@ -118,9 +154,13 @@ class ListSongState extends State<ListSong> {
           playlistSong.url_song,
         );
 
+        await reloadSong();
+        removeSong(songId);
+
         showSuccessDialog();
-        
         print('Song added to the playlist successfully.');
+
+        // Navigator.pop(context, true);
       }
     } catch (e) {
       // Handle errors, display an error message, or log the error
@@ -150,6 +190,26 @@ class ListSongState extends State<ListSong> {
     Future.delayed(Duration(seconds: 2), () {
       Navigator.of(context).pop();
     });
+  }
+
+  Future<void> showAllSongsAddedDialog() async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Playlist Updated'),
+          content: Text('All songs are already in the playlist.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -244,7 +304,7 @@ class ListSongState extends State<ListSong> {
                               color: Color(0xFF4A55A2),
                             ),
                             onPressed: () {
-                              handlePlayPause(index);
+                              playSong(index);
                             },
                           ),
                         ),
@@ -346,32 +406,9 @@ class ListSongState extends State<ListSong> {
         currentlyPlayingIndex = -1;
       });
     } else {
-      String songUrl = songs[index].url_song;
-      String encodedUrl = Uri.encodeFull(songUrl);
-
-      try {
-        await audioPlayer.setUrl(encodedUrl);
-        await audioPlayer.play();
-        setState(() {
-          isPlaying = true;
-          currentlyPlayingIndex = index;
-        });
-
-        audioPlayer.playerStateStream.listen((playerState) {
-          if (playerState.processingState == ProcessingState.completed) {
-            setState(() {
-              isPlaying = false;
-            });
-          }
-        });
-      } catch (e) {
-        print('Error playing the song: $e');
-        setState(() {
-          isPlaying = false;
-          currentlyPlayingIndex = -1;
-        });
-      }
+      playSong(index);
     }
+
     setState(() {
       currentlyPlayingIndex = index;
     });
@@ -392,30 +429,45 @@ class ListSongState extends State<ListSong> {
   }
 
   void playSong(int index) async {
-    String songUrl = songs[index].url_song;
-    String encodedUrl = Uri.encodeFull(songUrl);
-
-    try {
-      await audioPlayer.setUrl(encodedUrl);
-      await audioPlayer.play();
-      setState(() {
-        isPlaying = true;
-      });
-
-      audioPlayer.playerStateStream.listen((playerState) {
-        if (playerState.processingState == ProcessingState.completed) {
-          setState(() {
-            isPlaying = false;
-          });
-        }
-      });
-    } catch (e) {
-      print('Error playing the song: $e');
+    if (audioPlayer.playing && currentlyPlayingIndex == index) {
+      // Jika lagu yang diputar adalah lagu yang sama, hentikan lagu
+      await audioPlayer.stop();
       setState(() {
         isPlaying = false;
         currentlyPlayingIndex = -1;
       });
+    } else {
+      // Jika lagu yang diputar bukan lagu yang sama, putar lagu baru
+      String songUrl = songs[index].url_song;
+      String encodedUrl = Uri.encodeFull(songUrl);
+
+      try {
+        await audioPlayer.setUrl(encodedUrl);
+        await audioPlayer.play();
+        setState(() {
+          isPlaying = true;
+          currentlyPlayingIndex = index;
+        });
+
+        audioPlayer.playerStateStream.listen((playerState) {
+          if (playerState.processingState == ProcessingState.completed) {
+            setState(() {
+              isPlaying = false;
+              currentlyPlayingIndex = -1;
+            });
+          }
+        });
+      } catch (e) {
+        print('Error playing the song: $e');
+        setState(() {
+          isPlaying = false;
+          currentlyPlayingIndex = -1;
+        });
+      }
     }
+    setState(() {
+      currentlyPlayingIndex = index;
+    });
   }
 }
 
@@ -477,14 +529,14 @@ class AudioControls extends StatelessWidget {
                   Text(
                     currentlyPlayingIndex != -1
                         ? songs[currentlyPlayingIndex].title
-                        : '', 
+                        : '',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4),
                   Text(
                     currentlyPlayingIndex != -1
                         ? songs[currentlyPlayingIndex].artist
-                        : '', 
+                        : '',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],

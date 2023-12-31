@@ -25,6 +25,7 @@ class PlaylistDetail extends StatefulWidget {
 class PlaylistDetailState extends State<PlaylistDetail> {
   late AudioPlayer audioPlayer;
   late ValueNotifier<int> _notifier;
+  bool showAdditionalContent = true;
 
   bool isPlaying = false;
   int currentlyPlayingIndex = -1;
@@ -115,6 +116,16 @@ class PlaylistDetailState extends State<PlaylistDetail> {
       final args = ModalRoute.of(context)?.settings.arguments as List<String>;
 
       selectSongsInPlaylist(args[0]);
+    });
+  }
+
+  Future<void> reloadAdditionalContent() async {
+    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+    List<PlaylistSongModel> updatedSongs = await selectSongsInPlaylist(args[0]);
+
+    setState(() {
+      songs = updatedSongs;
+      showAdditionalContent = songs.isEmpty;
     });
   }
 
@@ -381,7 +392,7 @@ class PlaylistDetailState extends State<PlaylistDetail> {
                                             context,
                                             'list_song',
                                             arguments: [playlist[0].id],
-                                          ).then(reloadDataPlaylist);
+                                          ).then(reloadDataSong);
                                         },
                                       ),
                                       IconButton(
@@ -465,15 +476,18 @@ class PlaylistDetailState extends State<PlaylistDetail> {
                                 audioPlayer: audioPlayer,
                                 onPlayed: handlePlayPause,
                                 song: song,
+                                onAllDataDeleted: reloadAdditionalContent,
                               )
-                            else
+                            else if (showAdditionalContent)
                               AdditionalContentWidget(
                                 onPressed: () {
                                   Navigator.pushNamed(context, 'list_song',
                                           arguments: [playlist[0].id])
-                                      .then(reloadDataPlaylist);
+                                      .then(reloadDataSong);
                                 },
-                              ),
+                              )
+                            else
+                              Container(),
                           ],
                         );
                       }
