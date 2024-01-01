@@ -198,8 +198,8 @@ class RegisterPageState extends State<RegisterPage>
                                   },
                                   child: Icon(
                                       _obscureText
-                                          ? Icons.visibility
-                                          : Icons.visibility_off,
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
                                       color: Color(0xFF4A55A2)),
                                 ),
                                 filled: true,
@@ -250,13 +250,12 @@ class RegisterPageState extends State<RegisterPage>
                                                       emailTextController.text,
                                                 );
 
-                                                Navigator.of(context)
-                                                    .pushAndRemoveUntil(
+                                                Navigator.pushReplacement(
+                                                  context,
                                                   MaterialPageRoute(
                                                     builder: (context) =>
-                                                        LoginPage(),
+                                                        NavBarDemo(user: user),
                                                   ),
-                                                  ModalRoute.withName('/'),
                                                 );
                                               }
                                             }

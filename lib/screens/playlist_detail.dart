@@ -104,9 +104,11 @@ class PlaylistDetailState extends State<PlaylistDetail> {
   }
 
   Future reloadDataPlaylist(dynamic value) async {
-    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+    setState(() {
+      final args = ModalRoute.of(context)?.settings.arguments as List<String>;
 
-    await selectIdPlaylist(args[0]);
+      selectIdPlaylist(args[0]);
+    });
   }
 
   Future reloadDataSong(dynamic value) async {

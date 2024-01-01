@@ -66,15 +66,16 @@ class _LoginPageState extends State<LoginPage> {
         print('Role: $role');
 
         if (role == 'admin') {
-          Navigator.of(context).pushReplacement(
+          Navigator.pushReplacement(
+            context,
             MaterialPageRoute(
               builder: (context) => SongFormAdd(),
             ),
           );
         } else {
-          Navigator.of(context).pushReplacement(
+          Navigator.pushReplacement(
+            context,
             MaterialPageRoute(
-              //builder: (context) => MusicPlayerScreen(),
               builder: (context) => NavBarDemo(user: user),
             ),
           );
@@ -83,6 +84,56 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     return firebaseApp;
+  }
+
+  Future<void> _login() async {
+    _focusEmail.unfocus();
+    _focusPassword.unfocus();
+
+    if (_formKey.currentState!.validate()) {
+      setState(() {
+        _isProcessing = true;
+      });
+
+      User? user = await FireAuth.signInUsingEmailPassword(
+        email: _emailTextController.text,
+        password: _passwordTextController.text,
+      );
+
+      setState(() {
+        _isProcessing = false;
+      });
+
+      if (user != null) {
+        DocumentSnapshot<Map<String, dynamic>> userData =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get();
+
+        if (userData.exists) {
+          String role = userData['role'];
+
+          print('Role: $role');
+
+          if (role == 'admin') {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SongFormAdd(),
+              ),
+            );
+          } else {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => NavBarDemo(user: user),
+              ),
+            );
+          }
+        }
+      }
+    }
   }
 
   @override
@@ -179,8 +230,8 @@ class _LoginPageState extends State<LoginPage> {
                                 },
                                 child: Icon(
                                     _obscureText
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
                                     color: Color(0xFF4A55A2)),
                               ),
                               filled: true,
@@ -194,35 +245,16 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                           const SizedBox(height: 25.0),
                           _isProcessing
-                              ? const CircularProgressIndicator()
+                              ? const Center(
+                                  child: CircularProgressIndicator(),
+                                )
                               : Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Expanded(
                                       child: ElevatedButton(
-                                        onPressed: () async {
-                                          _focusEmail.unfocus();
-                                          _focusPassword.unfocus();
-
-                                          if (_formKey.currentState!
-                                              .validate()) {
-                                            setState(() {
-                                              _isProcessing = true;
-                                            });
-
-                                            User? user = await FireAuth
-                                                .signInUsingEmailPassword(
-                                              email: _emailTextController.text,
-                                              password:
-                                                  _passwordTextController.text,
-                                            );
-
-                                            setState(() {
-                                              _isProcessing = false;
-                                            });
-                                          }
-                                        },
+                                        onPressed: _login,
                                         style: ElevatedButton.styleFrom(
                                             primary: Colors.white,
                                             onPrimary: Color(0xFF4A55A2),
@@ -278,8 +310,8 @@ class _LoginPageState extends State<LoginPage> {
             }
 
             return const Center(
-                //child: CircularProgressIndicator(),
-                );
+              child: CircularProgressIndicator(),
+            );
           },
         ),
       ),
@@ -289,6 +321,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void dispose() {
     // Membersihkan sumber daya ketika widget dihapus
+
     _emailTextController.dispose();
     _passwordTextController.dispose();
     _focusEmail.dispose();

@@ -175,19 +175,11 @@ class ListSongState extends State<ListSong> {
         return AlertDialog(
           title: Text('Success'),
           content: Text('Song added to the playlist successfully.'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: Text('OK'),
-            ),
-          ],
         );
       },
     );
 
-    Future.delayed(Duration(seconds: 2), () {
+    Future.delayed(Duration(seconds: 1), () {
       Navigator.of(context).pop();
     });
   }
@@ -224,7 +216,7 @@ class ListSongState extends State<ListSong> {
         ),
         title: !searchStatus
             ? const Text(
-                "Playlist List",
+                "Song List",
                 style: TextStyle(
                     color: Color(0xFF4A55A2), fontWeight: FontWeight.bold),
               )

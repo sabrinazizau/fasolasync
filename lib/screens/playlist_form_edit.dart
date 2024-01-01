@@ -69,8 +69,7 @@ class PlaylistFormEditState extends State<PlaylistFormEdit> {
             ),
             onPressed: () {
               // Implement save functionality
-              saveChanges();
-              Navigator.of(context).pop(); // Close the form after saving
+              saveChanges(); // Close the form after saving
             },
           ),
         ],
@@ -134,5 +133,9 @@ class PlaylistFormEditState extends State<PlaylistFormEdit> {
         'playlist',
         appid,
         update_id);
+
+    if (updateStatus) {
+      Navigator.pop(context, true);
+    }
   }
 }
