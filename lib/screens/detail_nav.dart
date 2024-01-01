@@ -67,7 +67,7 @@ class DetailPlayerScreenState extends State<DetailPlayerScreen> {
   Widget _buildContent() {
     switch (_selectedIndex) {
       case 0:
-        return PlaylistDetail();
+        return const PlaylistDetail();
       case 1:
         return libraryPage();
       default:

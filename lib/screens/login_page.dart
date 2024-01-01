@@ -4,13 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:fasolasync/screens/nav_bar.dart';
 
 import '/utils/fire_auth.dart';
 import '/utils/validator.dart';
-
-import '/screens/home.dart';
 
 const kTextFieldDecoration = InputDecoration(
   //hintText: 'Enter a value',
@@ -39,15 +36,6 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscureText = true;
 
   String role = '';
-
-  // @override
-  // void dispose() {
-  //   _emailTextController.dispose();
-  //   _passwordTextController.dispose();
-  //   _focusEmail.dispose();
-  //   _focusPassword.dispose();
-  //   super.dispose();
-  // }
 
   Future<FirebaseApp> _initializeFirebase() async {
     FirebaseApp firebaseApp = await Firebase.initializeApp();
@@ -136,13 +124,6 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                     ),
                     const SizedBox(height: 25.0),
-
-                    // const SizedBox(height: 50.0),
-                    // SvgPicture.asset(
-                    //   'assets/undraw_music_re_a2jk.svg',
-                    //   height: 200,
-                    // ),
-
                     Form(
                       key: _formKey,
                       child: Column(
@@ -238,37 +219,6 @@ class _LoginPageState extends State<LoginPage> {
                                               fontWeight: FontWeight.bold),
                                         ),
                                       ),
-
-                                      //   child: const Padding(
-                                      //     padding: EdgeInsets.symmetric(
-                                      //         vertical: 10.0, horizontal: 20.0),
-                                      //     child: const Text(
-                                      //       'Sign In',
-                                      //       style: TextStyle(
-                                      //         color: Color(0xFF4A55A2),
-                                      //       ),
-                                      //     ),
-                                      //   ),
-                                      // ),
-
-                                      //const SizedBox(width: 24.0),
-
-                                      // Expanded(
-                                      //   child: ElevatedButton(
-                                      //     onPressed: () {
-                                      //       Navigator.of(context).push(
-                                      //         MaterialPageRoute(
-                                      //           builder: (context) =>
-                                      //               const RegisterPage(),
-                                      //         ),
-                                      //       );
-                                      //     },
-                                      //     child: const Text(
-                                      //       'Register',
-                                      //       style: TextStyle(color: Colors.white),
-                                      //     ),
-                                      //   ),
-                                      // ),
                                     ),
                                   ],
                                 )
@@ -288,6 +238,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
     );
   }
+
   @override
   void dispose() {
     // Membersihkan sumber daya ketika widget dihapus

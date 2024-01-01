@@ -1,4 +1,5 @@
 import 'package:fasolasync/screens/detail_nav.dart';
+import 'package:fasolasync/screens/detailz.dart';
 import 'package:fasolasync/screens/list_song.dart';
 import 'package:fasolasync/screens/playlist_form_edit.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -47,6 +48,7 @@ class MyApp extends StatelessWidget {
         'register_page': (context) => const RegisterPage(),
         'playlist_form_add': (context) => const PlaylistFormAdd(),
         'playlist_operations': (context) => const HomeContent(),
+        'detailz' : (context) => const DetailPlayliztScreen(),
         'detail_nav': (context) => const DetailPlayerScreen(),
         'playlist_detail': (context) => const PlaylistDetail(),
         'playlist_list': (context) => const PlaylistList(),
@@ -77,14 +79,14 @@ class SplashScreen extends StatelessWidget {
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.active) {
-            User? user = snapshot.data as User?;
+            User? user = snapshot.data;
             if (user != null) {
               return NavBarDemo(user: user);
             } else {
-              return NavBarDemo(user: null);
+              return const NavBarDemo(user: null);
             }
           } else {
-            return CircularProgressIndicator();
+            return const Center(child: CircularProgressIndicator());
           }
         },
       ),

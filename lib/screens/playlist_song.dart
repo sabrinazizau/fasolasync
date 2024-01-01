@@ -152,7 +152,7 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
       future: selectSongsInPlaylist(args[0]),
       builder: (context, AsyncSnapshot<dynamic> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return CircularProgressIndicator();
+          return const Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Text('Error: ${snapshot.error}');
         } else {
@@ -168,17 +168,17 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.white,
                 ),
-                margin: const EdgeInsets.only(bottom: 4),
+                margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 5),
                 child: ListTile(
                   title: Text(
-                    songsInPlaylist[index].artist,
+                    songsInPlaylist[index].title,
                     style: TextStyle(
                         color: Colors.black,
                         fontWeight: FontWeight.bold,
                         fontSize: 15),
                   ),
                   subtitle: Text(
-                    songsInPlaylist[index].title,
+                    songsInPlaylist[index].artist,
                     style: TextStyle(color: Colors.black, fontSize: 12),
                   ),
                   leading: AnimatedSwitcher(

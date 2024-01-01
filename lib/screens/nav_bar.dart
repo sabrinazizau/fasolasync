@@ -18,6 +18,8 @@ class NavBarDemo extends StatefulWidget {
 }
 
 class _NavBarDemoState extends State<NavBarDemo> {
+  User? user = FirebaseAuth.instance.currentUser;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,7 +66,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => HomeContent(),
+                          builder: (context) => NavBarDemo(user: user),
                         ),
                       );
                     },
@@ -80,8 +82,15 @@ class _NavBarDemoState extends State<NavBarDemo> {
                         color: Color(0xFF4A55A2),
                       ),
                     ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => libraryPage(),
+                        ),
+                      );
+                    },
                   ),
-
                   RoundedButton(
                       colour: Color(0xFFBFACE2),
                       title: 'Add Playlist',
@@ -139,8 +148,8 @@ class _NavBarDemoState extends State<NavBarDemo> {
     try {
       await FirebaseAuth.instance.signOut();
       Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => NavBarDemo(user: null)),
-    );
+        MaterialPageRoute(builder: (context) => NavBarDemo(user: null)),
+      );
     } catch (e) {
       print("Error during logout: $e");
     }
@@ -187,8 +196,8 @@ class _NavBarDemoState extends State<NavBarDemo> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => LoginPage()));
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => LoginPage()));
           },
           child: Text(
             'Log In',
@@ -197,8 +206,8 @@ class _NavBarDemoState extends State<NavBarDemo> {
         ),
         TextButton(
           onPressed: () {
-            Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => RegisterPage()));
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => RegisterPage()));
           },
           child: Text(
             'Sign Up',
