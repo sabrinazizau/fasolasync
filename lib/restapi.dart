@@ -1211,6 +1211,35 @@ class DataService {
     }
   }
 
+  Future insertPlaylistSong(String appid, String playlist_id, String song_id,
+      String title, String artist, String url_song) async {
+    String uri = 'https://io.etter.cloud/v4/insert';
+
+    try {
+      final response = await http.post(Uri.parse(uri), body: {
+        'token': '651bc3ed9b493f4b9fe2485f',
+        'project': 'fasolasync',
+        'collection': 'playlist_song',
+        'appid': appid,
+        'playlist_id': playlist_id,
+        'song_id': song_id,
+        'title': title,
+        'artist': artist,
+        'url_song': url_song
+      });
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else {
+        // Return an empty array
+        return '[]';
+      }
+    } catch (e) {
+      // Print error here
+      return '[]';
+    }
+  }
+
   Future insertSongs(
       String appid, String title, String artist, String url_song) async {
     String uri = 'https://io.etter.cloud/v4/insert';

@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:just_audio/just_audio.dart';
 import 'package:flutter/material.dart';
+import '../models/playlist_song_model.dart';
 import '../models/song_model.dart';
 import '../config.dart';
 import '../models/playlist_model.dart';
 import '../restapi.dart';
-import 'playlist_detail.dart';
 
 class ListSong extends StatefulWidget {
   const ListSong({Key? key}) : super(key: key);
@@ -22,16 +22,28 @@ class ListSongState extends State<ListSong> {
   final searchKeyword = TextEditingController();
   bool searchStatus = false;
   DataService ds = DataService();
+
   List data = [];
   List<SongsModel> songs = [];
-  List<SongsModel> songsPlaylist = [];
   List<PlaylistModel> playlist = [];
+  List<PlaylistSongModel> songsPlaylist = [];
   List<SongsModel> search_data = [];
   List<SongsModel> search_data_pre = [];
 
   selectAllSong() async {
     data = jsonDecode(await ds.selectAll(token, project, 'songs', appid));
     songs = data.map((e) => SongsModel.fromJson(e)).toList();
+
+    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+
+    // Fetch the songs in the playlist
+    List<PlaylistSongModel> songsInPlaylist =
+        await selectSongsInPlaylist(args[0]);
+
+    // Exclude songs in the playlist from the list
+    songs.removeWhere((song) =>
+        songsInPlaylist.any((playlistSong) => playlistSong.song_id == song.id));
+
     setState(() {
       songs = songs;
     });
@@ -45,12 +57,40 @@ class ListSongState extends State<ListSong> {
     }
   }
 
-  selectIdSong(String id) async {
+  selectSongsInPlaylist(String playlistId) async {
     List data = [];
-    data = jsonDecode(await ds.selectId(token, project, 'songs', appid, id));
-    if (data.isNotEmpty) {
-      songs = data.map((e) => SongsModel.fromJson(e)).toList();
+
+    try {
+      data = jsonDecode(await ds.selectWhere(
+          token, project, 'playlist_song', appid, 'playlist_id', playlistId));
+      songsPlaylist = data.map((e) => PlaylistSongModel.fromJson(e)).toList();
+      print(songsPlaylist);
+    } catch (e) {
+      print('error : $e');
     }
+
+    return songsPlaylist;
+  }
+
+  Future<void> reloadSong() async {
+    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+
+    try {
+      List<PlaylistSongModel> updatedSongs =
+          await selectSongsInPlaylist(args[0]);
+
+      setState(() {
+        songsPlaylist = updatedSongs;
+      });
+    } catch (e) {
+      print('Error reloading songs: $e');
+    }
+  }
+
+  Future<void> removeSong(String songId) async {
+    setState(() {
+      songs.removeWhere((song) => song.id == songId);
+    });
   }
 
   void filterSong(String enteredKeyword) {
@@ -84,34 +124,92 @@ class ListSongState extends State<ListSong> {
     audioPlayer = AudioPlayer();
   }
 
-  Future<void> addSongToPlaylist(
-      List<String> songIds, String playlistId) async {
+  Future<void> addSongToPlaylist(String songId, String playlistId) async {
     try {
-      // Fetch the existing playlist data
-      List playlistData = jsonDecode(
-          await ds.selectId(token, project, 'playlist', appid, playlistId));
+      List songData =
+          jsonDecode(await ds.selectId(token, project, 'songs', appid, songId));
 
-      if (playlistData.isNotEmpty) {
-        // Get the playlist model
-        PlaylistModel playlistModel =
-            PlaylistModel.fromJson(playlistData.first);
+      if (playlist.isNotEmpty && songData.isNotEmpty) {
+        String title = songData[0]['title'];
+        String artist = songData[0]['artist'];
+        String url_song = songData[0]['url_song'];
 
-        // Update the playlist with the new song
-        playlistModel.song_ids.addAll(songIds);
-        // Convert the updated playlist model back to JSON
-        String updatedPlaylistJson = jsonEncode(playlistModel.song_ids);
+        PlaylistSongModel playlistSong = PlaylistSongModel(
+          id: appid,
+          playlist_id: playlistId,
+          song_id: songId,
+          title: title,
+          artist: artist,
+          url_song: url_song,
+        );
 
-        // Update the playlist in the database
-        await ds.updateId('song_id', updatedPlaylistJson, token, project,
-            'playlist', appid, playlistId);
+        songsPlaylist.add(playlistSong);
 
-        // Show a success message or perform additional actions if needed
+        await ds.insertPlaylistSong(
+          appid,
+          playlistSong.playlist_id,
+          playlistSong.song_id,
+          playlistSong.title,
+          playlistSong.artist,
+          playlistSong.url_song,
+        );
+
+        await reloadSong();
+        removeSong(songId);
+
+        showSuccessDialog();
         print('Song added to the playlist successfully.');
+
+        // Navigator.pop(context, true);
       }
     } catch (e) {
       // Handle errors, display an error message, or log the error
       print('Error adding song to the playlist: $e');
     }
+  }
+
+  void showSuccessDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Success'),
+          content: Text('Song added to the playlist successfully.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+
+    Future.delayed(Duration(seconds: 2), () {
+      Navigator.of(context).pop();
+    });
+  }
+
+  Future<void> showAllSongsAddedDialog() async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Playlist Updated'),
+          content: Text('All songs are already in the playlist.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -126,7 +224,7 @@ class ListSongState extends State<ListSong> {
         ),
         title: !searchStatus
             ? const Text(
-                "Song List",
+                "Playlist List",
                 style: TextStyle(
                     color: Color(0xFF4A55A2), fontWeight: FontWeight.bold),
               )
@@ -182,7 +280,8 @@ class ListSongState extends State<ListSong> {
                         borderRadius: BorderRadius.circular(10),
                         color: Colors.white,
                       ),
-                      margin: const EdgeInsets.only(bottom: 4),
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 25, vertical: 5),
                       child: ListTile(
                         title: Text(
                           item.title,
@@ -206,7 +305,7 @@ class ListSongState extends State<ListSong> {
                               color: Color(0xFF4A55A2),
                             ),
                             onPressed: () {
-                              playSong(index);
+                              handlePlayPause(index, context);
                             },
                           ),
                         ),
@@ -224,10 +323,7 @@ class ListSongState extends State<ListSong> {
                               size: 20,
                             ),
                             onPressed: () {
-                              List<String> songIdsToAdd =
-                                  songs.map((song) => song.id).toList();
-                              // Call the method to add the song to the playlist
-                              addSongToPlaylist(songIdsToAdd, args[0]);
+                              addSongToPlaylist(item.id, args[0]);
                             },
                           ),
                         ),
@@ -240,12 +336,6 @@ class ListSongState extends State<ListSong> {
           }
         },
       ),
-      bottomSheet: AudioControls(
-          audioPlayer: audioPlayer,
-          songs: songs,
-          currentlyPlayingIndex: currentlyPlayingIndex,
-          playNext: playNext,
-          playPrevious: playPrevious),
     );
   }
 
@@ -282,13 +372,44 @@ class ListSongState extends State<ListSong> {
           );
   }
 
+  void handlePlayPause(int index, BuildContext context) async {
+    if (audioPlayer.playing) {
+      await audioPlayer.pause(); // Pause the audio
+      setState(() {
+        isPlaying = false;
+        currentlyPlayingIndex = -1;
+      });
+    } else {
+      // If the audio is not playing, start playing the selected song
+      playSong(index);
+
+      // Show bottom sheet with AudioControl when play icon is clicked
+      showBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return AudioControls(
+            audioPlayer: audioPlayer,
+            songs: songs,
+            currentlyPlayingIndex: currentlyPlayingIndex,
+            playNext: playNext,
+            playPrevious: playPrevious,
+          );
+        },
+      );
+    }
+
+    setState(() {
+      currentlyPlayingIndex = index;
+    });
+  }
+
   Widget search_field() {
     return TextField(
       controller: searchKeyword,
       autofocus: true,
-      cursorColor: Colors.white,
+      cursorColor: Color(0xFF4A55A2),
       style: const TextStyle(
-        color: Colors.white,
+        color: Color(0xFF4A55A2),
         fontSize: 20,
       ),
       textInputAction: TextInputAction.search,
@@ -296,41 +417,11 @@ class ListSongState extends State<ListSong> {
       decoration: const InputDecoration(
         hintText: 'Enter to Search',
         hintStyle: TextStyle(
-          color: Color.fromARGB(255, 255, 255, 255),
+          color: Color(0xFF4A55A2),
           fontSize: 20,
         ),
       ),
     );
-  }
-
-  Widget buildPlayPauseButton(int index) {
-    return IconButton(
-      icon: Icon(
-        isPlaying && currentlyPlayingIndex == index
-            ? Icons.pause
-            : Icons.play_arrow,
-        color: Colors.white,
-      ),
-      onPressed: () {
-        handlePlayPause(index);
-      },
-    );
-  }
-
-  void handlePlayPause(int index) async {
-    if (audioPlayer.playing) {
-      await audioPlayer.stop();
-      setState(() {
-        isPlaying = false;
-        currentlyPlayingIndex = -1;
-      });
-    } else {
-      playSong(index);
-    }
-
-    setState(() {
-      currentlyPlayingIndex = index;
-    });
   }
 
   void playNext() {
@@ -384,6 +475,18 @@ class ListSongState extends State<ListSong> {
         });
       }
     }
+    // showBottomSheet(
+    //   context: context,
+    //   builder: (BuildContext context) {
+    //     return AudioControls(
+    //       audioPlayer: audioPlayer,
+    //       songs: songs,
+    //       currentlyPlayingIndex: currentlyPlayingIndex,
+    //       playNext: playNext,
+    //       playPrevious: playPrevious,
+    //     );
+    //   },
+    // );
     setState(() {
       currentlyPlayingIndex = index;
     });
@@ -417,7 +520,6 @@ class AudioControls extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
     return Container(
       padding: EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -433,7 +535,6 @@ class AudioControls extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                // Tambahkan logika untuk menampilkan gambar album atau ikon lainnya
                 backgroundColor: Colors.blue[900],
                 radius: 25,
                 child: Icon(
@@ -450,14 +551,14 @@ class AudioControls extends StatelessWidget {
                   Text(
                     currentlyPlayingIndex != -1
                         ? songs[currentlyPlayingIndex].title
-                        : '', // Ganti dengan nama lagu aktual
+                        : '',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 4),
                   Text(
                     currentlyPlayingIndex != -1
                         ? songs[currentlyPlayingIndex].artist
-                        : '', // Ganti dengan nama artis aktual
+                        : '',
                     style: TextStyle(color: Colors.grey),
                   ),
                 ],

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,12 +6,10 @@ import 'package:tugas5/screens/nav_bar.dart';
 
 import 'package:tugas5/utils/fire_auth.dart';
 import 'package:tugas5/utils/validator.dart';
-//import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:tugas5/screens/login_page.dart';
 
 const kTextFieldDecoration = InputDecoration(
-  //hintText: 'Enter a value',
   hintStyle: TextStyle(color: Colors.blueGrey),
   contentPadding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
 );
@@ -26,7 +25,6 @@ class RegisterPageState extends State<RegisterPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<Color?> _backgroundColor;
-  //late Animation<Color?> _textColor;
 
   final registerFormKey = GlobalKey<FormState>();
 
@@ -40,6 +38,17 @@ class RegisterPageState extends State<RegisterPage>
 
   bool isProcessing = false;
   bool _obscureText = true;
+
+  Future<void> _registerInUsersCollection({
+    required String userId,
+    required String role,
+    required String email,
+  }) async {
+    await FirebaseFirestore.instance.collection('users').doc(userId).set({
+      'email': email,
+      'role': role,
+    });
+  }
 
   Future<FirebaseApp> _initializeFirebase() async {
     FirebaseApp firebaseApp = await Firebase.initializeApp();
@@ -68,25 +77,6 @@ class RegisterPageState extends State<RegisterPage>
       begin: const Color(0xFFEBC7E6),
       end: const Color(0xFF645CBB),
     ).animate(_controller);
-
-    //  _textColor = TweenSequence<Color?>(
-    //   <TweenSequenceItem<Color?>>[
-    //     TweenSequenceItem<Color?>(
-    //       tween: ColorTween(
-    //         begin: const Color(0xFF4A55A2),
-    //         end: const Color(0xFFFFFFFF),
-    //       ),
-    //       weight: 50,
-    //     ),
-    //     TweenSequenceItem<Color?>(
-    //       tween: ColorTween(
-    //         begin: const Color(0xFFFFFFFF),
-    //         end: const Color(0xFF4A55A2),
-    //       ),
-    //       weight: 50,
-    //     ),
-    //   ],
-    // ).animate(_controller);
   }
 
   @override
@@ -150,12 +140,6 @@ class RegisterPageState extends State<RegisterPage>
                         ),
                       ),
                       const SizedBox(height: 25.0),
-
-                      // SvgPicture.asset(
-                      //   'assets/undraw_music_re_a2jk.svg',
-                      //   height: 200,
-                      // ),
-
                       Form(
                         key: registerFormKey,
                         child: Column(
@@ -231,7 +215,9 @@ class RegisterPageState extends State<RegisterPage>
                             ),
                             const SizedBox(height: 32.0),
                             isProcessing
-                                ? const CircularProgressIndicator()
+                                ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
                                 : Row(
                                     children: [
                                       Expanded(
@@ -257,6 +243,13 @@ class RegisterPageState extends State<RegisterPage>
                                               });
 
                                               if (user != null) {
+                                                await _registerInUsersCollection(
+                                                  userId: user.uid,
+                                                  role: 'user',
+                                                  email:
+                                                      emailTextController.text,
+                                                );
+
                                                 Navigator.of(context)
                                                     .pushAndRemoveUntil(
                                                   MaterialPageRoute(
@@ -278,9 +271,6 @@ class RegisterPageState extends State<RegisterPage>
                                             'Sign Up',
                                             style: TextStyle(
                                                 fontWeight: FontWeight.bold),
-                                            // child: const Text(
-                                            //   'Sign Up',
-                                            //   style: TextStyle(color: Colors.white),
                                           ),
                                         ),
                                       ),

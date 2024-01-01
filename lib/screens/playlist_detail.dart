@@ -1,12 +1,11 @@
 import 'dart:convert';
-
+import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:http/http.dart' as http;
 import '../screens/playlist_song.dart';
 import '../models/playlist_model.dart';
 import '../models/playlist_song_model.dart';
@@ -14,16 +13,17 @@ import '../models/song_model.dart';
 import '../config.dart';
 import '../restapi.dart';
 
-class DetailPlaylist extends StatefulWidget {
-  const DetailPlaylist({Key? key}) : super(key: key);
+class PlaylistDetail extends StatefulWidget {
+  const PlaylistDetail({Key? key}) : super(key: key);
 
   @override
-  DetailPlaylistState createState() => DetailPlaylistState();
+  PlaylistDetailState createState() => PlaylistDetailState();
 }
 
-class DetailPlaylistState extends State<DetailPlaylist> {
+class PlaylistDetailState extends State<PlaylistDetail> {
   late AudioPlayer audioPlayer;
   late ValueNotifier<int> _notifier;
+  bool showAdditionalContent = true;
 
   bool isPlaying = false;
   int currentlyPlayingIndex = -1;
@@ -117,6 +117,16 @@ class DetailPlaylistState extends State<DetailPlaylist> {
     });
   }
 
+  Future<void> reloadAdditionalContent() async {
+    final args = ModalRoute.of(context)?.settings.arguments as List<String>;
+    List<PlaylistSongModel> updatedSongs = await selectSongsInPlaylist(args[0]);
+
+    setState(() {
+      songs = updatedSongs;
+      showAdditionalContent = songs.isEmpty;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -152,144 +162,171 @@ class DetailPlaylistState extends State<DetailPlaylist> {
   @override
   Widget build(BuildContext context) {
     final args = ModalRoute.of(context)?.settings.arguments as List<String>;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+    double screenHeight = MediaQuery.of(context).size.height;
 
-    return Scaffold(
-      body: SingleChildScrollView(
-        physics: ClampingScrollPhysics(),
-        child: FutureBuilder<dynamic>(
-          future: selectIdPlaylist(args[0]),
-          builder: (context, AsyncSnapshot<dynamic> snapshot) {
-            switch (snapshot.connectionState) {
-              case ConnectionState.none:
-                {
-                  return const Text('none');
-                }
-              case ConnectionState.waiting:
-                {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              case ConnectionState.active:
-                {
-                  return const Text('Active');
-                }
-              case ConnectionState.done:
-                {
-                  if (snapshot.hasError) {
-                    return Text('${snapshot.error}',
-                        style: const TextStyle(color: Colors.red));
-                  } else {
-                    return FutureBuilder<List<PlaylistSongModel>>(
-                      future: selectSongsInPlaylist(args[0]),
-                      builder: (context,
-                          AsyncSnapshot<List<PlaylistSongModel>> snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return CircularProgressIndicator();
-                        } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
-                        } else {
-                          List<PlaylistSongModel> song = snapshot.data!;
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Container(
-                                decoration: const BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                    colors: [
-                                      Color(0xFFD6E6F2),
-                                      Color(0xFFA084DC),
-                                    ],
-                                  ),
-                                ),
-                                width: screenWidth,
-                                height: screenHeight * 0.50,
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFA084DC),
+                Color(0xFFD6E6F2),
+              ],
+              begin: FractionalOffset.bottomCenter,
+              end: FractionalOffset.topCenter,
+            ),
+          ),
+        ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          body: FutureBuilder<dynamic>(
+            future: selectIdPlaylist(args[0]),
+            builder: (context, AsyncSnapshot<dynamic> snapshot) {
+              switch (snapshot.connectionState) {
+                case ConnectionState.none:
+                  {
+                    return const Text('none');
+                  }
+                case ConnectionState.waiting:
+                  {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                case ConnectionState.active:
+                  {
+                    return const Text('Active');
+                  }
+                case ConnectionState.done:
+                  {
+                    if (snapshot.hasError) {
+                      return Text('${snapshot.error}',
+                          style: const TextStyle(color: Colors.red));
+                    } else {
+                      return FutureBuilder<List<PlaylistSongModel>>(
+                        future: selectSongsInPlaylist(args[0]),
+                        builder: (context,
+                            AsyncSnapshot<List<PlaylistSongModel>> snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                                child: CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else {
+                            List<PlaylistSongModel> song = snapshot.data!;
+                            return SingleChildScrollView(
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.start,
                                   children: [
                                     Row(
                                       children: [
-                                        Expanded(
-                                          child: Stack(
-                                            alignment: Alignment.bottomRight,
-                                            children: [
-                                              ValueListenableBuilder(
-                                                valueListenable: _notifier,
-                                                builder: (context, value,
-                                                        child) =>
-                                                    playlist_image == ''
-                                                        ? const Align(
-                                                            alignment: Alignment
-                                                                .bottomLeft,
-                                                            child: Icon(
-                                                              Icons
-                                                                  .library_music,
-                                                              color:
-                                                                  Colors.black,
-                                                              size: 300,
-                                                            ),
-                                                          )
-                                                        : Align(
-                                                            alignment: Alignment
-                                                                .bottomLeft,
-                                                            child: Padding(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .only(
-                                                                left: 64.0,
+                                        Stack(
+                                          alignment: Alignment.bottomRight,
+                                          children: [
+                                            ValueListenableBuilder(
+                                              valueListenable: _notifier,
+                                              builder:
+                                                  (context, value, child) =>
+                                                      playlist_image == ''
+                                                          ? const Align(
+                                                              alignment: Alignment
+                                                                  .centerLeft,
+                                                              child: Expanded(
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .library_music,
+                                                                  color: Colors
+                                                                      .black,
+                                                                  size: 200,
+                                                                ),
                                                               ),
-                                                              child: FittedBox(
-                                                                fit: BoxFit
-                                                                    .cover,
-                                                                child: Image
-                                                                    .network(
-                                                                  fileUri +
-                                                                      playlist_image,
-                                                                  width: 300,
-                                                                  height: 300,
+                                                            )
+                                                          : Align(
+                                                              alignment: Alignment
+                                                                  .centerLeft,
+                                                              child: Expanded(
+                                                                child: Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .only(
+                                                                          left:
+                                                                              25,
+                                                                          top:
+                                                                              25),
+                                                                  child:
+                                                                      FittedBox(
+                                                                    child:
+                                                                        Container(
+                                                                      width:
+                                                                          screenWidth /
+                                                                              5,
+                                                                      height:
+                                                                          screenWidth /
+                                                                              5,
+                                                                      decoration:
+                                                                          BoxDecoration(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(10.0), // Sesuaikan dengan kebutuhan
+                                                                        image:
+                                                                            DecorationImage(
+                                                                          image:
+                                                                              NetworkImage(fileUri + playlist_image),
+                                                                          fit: BoxFit
+                                                                              .contain,
+                                                                        ),
+                                                                      ),
+                                                                    ),
+                                                                    fit: BoxFit
+                                                                        .contain,
+                                                                  ),
                                                                 ),
                                                               ),
                                                             ),
-                                                          ),
-                                              ),
-                                              InkWell(
-                                                onTap: () => pickImage(args[0]),
-                                                child: Align(
+                                            ),
+                                            InkWell(
+                                              onTap: () => pickImage(args[0]),
+                                              child: Align(
+                                                // alignment: Alignment.bottomLeft,
+                                                child: Expanded(
                                                   child: Container(
-                                                    height: 30.00,
-                                                    width: 30.00,
+                                                    height: screenWidth / 25,
+                                                    width: screenWidth / 25,
                                                     margin:
                                                         const EdgeInsets.only(
-                                                      right: 10.0,
-                                                      bottom: 10.0,
+                                                      right: 10,
+                                                      bottom: 10,
                                                     ),
                                                     decoration: BoxDecoration(
                                                       color: Colors.white70,
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              5.00),
+                                                              screenHeight /
+                                                                  30),
                                                     ),
-                                                    child: const Icon(
+                                                    child: Icon(
                                                       Icons.camera_alt_outlined,
-                                                      size: 20,
+                                                      size: screenWidth / 45,
                                                       color: Colors.black,
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                            ],
-                                          ),
+                                            ),
+                                          ],
                                         ),
+                                        SizedBox(width: screenWidth / 50),
                                         Expanded(
                                           child: Container(
-                                            alignment: Alignment.bottomLeft,
-                                            padding: const EdgeInsets.all(16.0),
-                                            margin: EdgeInsets.only(top: 80.0),
+                                            margin: EdgeInsets.only(
+                                                top: screenHeight / 30),
+                                            padding: const EdgeInsets.all(8.0),
+                                            alignment: Alignment.centerLeft,
                                             child: Column(
                                               mainAxisAlignment:
                                                   MainAxisAlignment.start,
@@ -299,30 +336,34 @@ class DetailPlaylistState extends State<DetailPlaylist> {
                                                 Text(
                                                   'Playlist',
                                                   style: TextStyle(
-                                                    color: Colors.black,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 18,
-                                                  ),
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize:
+                                                          screenWidth / 50),
                                                 ),
                                                 SizedBox(
-                                                  height: 5,
+                                                  height: screenHeight / 60,
                                                 ),
                                                 Text(
                                                   playlist[0].playlist_name,
                                                   style: TextStyle(
-                                                    color: Colors.black,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 32,
-                                                  ),
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize:
+                                                          screenWidth / 20),
                                                 ),
-                                                SizedBox(height: 10),
+                                                SizedBox(
+                                                    height: screenHeight / 60),
                                                 Text(
                                                   playlist[0].playlist_desc,
                                                   style: TextStyle(
-                                                    color: Colors.black,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 18,
-                                                  ),
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      fontSize:
+                                                          screenWidth / 50),
                                                 ),
                                                 Row(
                                                   mainAxisAlignment:
@@ -332,13 +373,16 @@ class DetailPlaylistState extends State<DetailPlaylist> {
                                                     Text(
                                                       '${user!.displayName} • ${song.length} songs ',
                                                       style: TextStyle(
-                                                        color: Colors.black,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        fontSize: 18,
-                                                      ),
+                                                          color: Colors.black,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          fontSize: screenWidth /
+                                                              50 // Atur ukuran font sesuai kebutuhan
+                                                          ),
                                                     ),
-                                                    SizedBox(height: 5),
+                                                    SizedBox(
+                                                        height:
+                                                            screenHeight / 50),
                                                   ],
                                                 ),
                                               ],
@@ -353,12 +397,14 @@ class DetailPlaylistState extends State<DetailPlaylist> {
                                       child: Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.end,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           IconButton(
                                             icon: Icon(
                                               Icons.edit,
                                               color: Colors.black,
-                                              size: 30,
+                                              size: screenHeight / 30,
                                             ),
                                             onPressed: () {
                                               Navigator.pushNamed(
@@ -371,7 +417,7 @@ class DetailPlaylistState extends State<DetailPlaylist> {
                                           IconButton(
                                             icon: Icon(
                                               Icons.delete_outline,
-                                              size: 35.0,
+                                              size: screenHeight / 30,
                                               color: Colors.black,
                                             ),
                                             onPressed: () {
@@ -425,58 +471,53 @@ class DetailPlaylistState extends State<DetailPlaylist> {
                                         ],
                                       ),
                                     ),
+                                    Divider(thickness: 2),
+                                    if (song.isNotEmpty)
+                                      AddMoreSongs(
+                                        onPressed: () {
+                                          Navigator.pushNamed(
+                                            context,
+                                            'list_song',
+                                            arguments: [playlist[0].id],
+                                          ).then(reloadDataSong);
+                                        },
+                                      ),
+                                    if (song.isNotEmpty)
+                                      Container(
+                                        child: PlaylistSongsWidget(
+                                          playlistId: args[0],
+                                          audioPlayer: audioPlayer,
+                                          onPlayed: handlePlayPause,
+                                          song: song,
+                                          onAllDataDeleted:
+                                              reloadAdditionalContent,
+                                        ),
+                                      )
+                                    else if (showAdditionalContent)
+                                      AdditionalContentWidget(
+                                        onPressed: () {
+                                          Navigator.pushNamed(
+                                                  context, 'list_song',
+                                                  arguments: [playlist[0].id])
+                                              .then(reloadDataSong);
+                                        },
+                                      )
+                                    else
+                                      Container(),
                                   ],
                                 ),
                               ),
-                              Container(
-                                decoration: ShapeDecoration(
-                                  shape: RoundedRectangleBorder(
-                                    side: BorderSide(
-                                      width: 2,
-                                      strokeAlign: BorderSide.strokeAlignCenter,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              if (song.isNotEmpty)
-                                AddMoreSongs(
-                                  onPressed: () {
-                                    Navigator.pushNamed(
-                                      context,
-                                      'list_song',
-                                      arguments: [playlist[0].id],
-                                    ).then(reloadDataPlaylist);
-                                  },
-                                ),
-                              if (song.isNotEmpty)
-                                Container(
-                                  color: Color(0xFFA084DC),
-                                  child: PlaylistSongsWidget(
-                                    playlistId: args[0],
-                                    audioPlayer: audioPlayer,
-                                    onPlayed: handlePlayPause,
-                                    song: song,
-                                  ),
-                                )
-                              else
-                                AdditionalContentWidget(
-                                  onPressed: () {
-                                    Navigator.pushNamed(context, 'list_song',
-                                            arguments: [playlist[0].id])
-                                        .then(reloadDataPlaylist);
-                                  },
-                                ),
-                            ],
-                          );
-                        }
-                      },
-                    );
+                            );
+                          }
+                        },
+                      );
+                    }
                   }
-                }
-            }
-          },
+              }
+            },
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -494,8 +535,7 @@ class AddMoreSongs extends StatelessWidget {
     return ConstrainedBox(
       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width),
       child: Container(
-        padding: const EdgeInsets.all(16.0),
-        color: Color(0xFFA084DC),
+        margin: const EdgeInsets.symmetric(horizontal: 25, vertical: 10),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -551,7 +591,6 @@ class AdditionalContentWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(64.0),
-      color: Color(0xFFA084DC),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

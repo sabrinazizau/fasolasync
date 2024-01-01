@@ -81,18 +81,6 @@ class _NavBarDemoState extends State<NavBarDemo> {
                       _onBottomNavItemTapped(1);
                     },
                   ),
-                  // SizedBox(
-                  //   height: 40,
-                  //   width: double.infinity,
-                  //   child: RoundedButton(
-                  //     colour: Colors.white,
-                  //     title: 'Add Playlist',
-                  //     onPressed: () {
-                  //       Navigator.pushNamed(context, 'playlist_form_add');
-                  //     },
-                  //   ),
-                  // ),
-
                   Padding(
                     padding: const EdgeInsets.all(14.0),
                     child: Text(
@@ -102,21 +90,21 @@ class _NavBarDemoState extends State<NavBarDemo> {
                       ),
                     ),
                   ),
-                  ListTile(
-                    leading: Icon(
-                      Icons.account_circle,
-                      color: Color(0xFF4A55A2),
-                    ),
-                    title: Text(
-                      'Edit Profile',
-                      style: TextStyle(
-                        color: Color(0xFF4A55A2),
-                      ),
-                    ),
-                    onTap: () {
-                      // Handle navigation to the profile edit page
-                    },
-                  ),
+                  // ListTile(
+                  //   leading: Icon(
+                  //     Icons.account_circle,
+                  //     color: Color(0xFF4A55A2),
+                  //   ),
+                  //   title: Text(
+                  //     'Edit Profile',
+                  //     style: TextStyle(
+                  //       color: Color(0xFF4A55A2),
+                  //     ),
+                  //   ),
+                  //   onTap: () {
+                  //     // Handle navigation to the profile edit page
+                  //   },
+                  // ),
                   ListTile(
                     leading: Icon(
                       Icons.logout,
@@ -191,6 +179,9 @@ class _NavBarDemoState extends State<NavBarDemo> {
   void _handleLogout() async {
     try {
       await FirebaseAuth.instance.signOut();
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (context) => NavBarDemo(user: null)),
+      );
     } catch (e) {
       print("Error during logout: $e");
     }
@@ -201,6 +192,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
     print("Building Logged In Appbar");
     setState(() {});
     return AppBar(
+      automaticallyImplyLeading: false,
       leading: Builder(builder: (BuildContext context) {
         return IconButton(
           icon: const Icon(
@@ -224,7 +216,7 @@ class _NavBarDemoState extends State<NavBarDemo> {
   AppBar _buildLoggedOutAppBar() {
     print("Building Logged Out Appbar");
     return AppBar(
-      //iconTheme: IconThemeData(color: Colors.black),
+      automaticallyImplyLeading: false,
       title: Text(
         'FaSoLaSync',
         style: TextStyle(
@@ -235,8 +227,8 @@ class _NavBarDemoState extends State<NavBarDemo> {
       actions: [
         TextButton(
           onPressed: () {
-            Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => LoginPage()));
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => LoginPage()));
           },
           child: Text(
             'Log In',
@@ -245,8 +237,8 @@ class _NavBarDemoState extends State<NavBarDemo> {
         ),
         TextButton(
           onPressed: () {
-            Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => RegisterPage()));
+            Navigator.of(context)
+                .push(MaterialPageRoute(builder: (context) => RegisterPage()));
           },
           child: Text(
             'Sign Up',

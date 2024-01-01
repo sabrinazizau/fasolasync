@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:tugas5/admin/song_form_add.dart';
+import 'package:tugas5/screens/detail_nav.dart';
 import 'package:tugas5/screens/library.dart';
 import 'package:tugas5/screens/list_song.dart';
 import 'package:tugas5/screens/playlist_detail.dart';
@@ -47,12 +49,15 @@ class MyApp extends StatelessWidget {
         'playlist_detail': (context) => const PlaylistDetail(),
         'playlist_list': (context) => const PlaylistList(),
         'library': (context) => const libraryPage(),
+        'detail_nav': (context) => const DetailPlayerScreen(),
         'list_song': (context) => ListSong(),
         'playlist_form_edit': (context) => const PlaylistFormEdit(),
       },
     );
   }
 }
+
+String role = '';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -75,9 +80,43 @@ class SplashScreen extends StatelessWidget {
           if (snapshot.connectionState == ConnectionState.active) {
             User? user = snapshot.data as User?;
             if (user != null) {
-              return NavBarDemo(user: user);
+              return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(user.uid)
+                    .get(),
+                builder: (context, userDataSnapshot) {
+                  if (userDataSnapshot.connectionState ==
+                      ConnectionState.waiting) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (userDataSnapshot.hasError) {
+                    return Text('Error: ${userDataSnapshot.error}');
+                  } else {
+                    DocumentSnapshot<Map<String, dynamic>> userData =
+                        userDataSnapshot.data!;
+                    if (userData.exists) {
+                      String role = userData['role'];
+
+                      print('Role: $role');
+
+                      if (role == 'admin') {
+                        return SongFormAdd();
+                      } else {
+                        return NavBarDemo(user: user);
+                      }
+                    } else {
+                      // Handle the case where user data does not exist
+                      return Text('User data not found.');
+                    }
+                  }
+                },
+              );
             } else {
-              return NavBarDemo(user: null);
+              // Handle the case where user is null
+              return NavBarDemo(
+                  user: null); // Redirect to login if user is not authenticated
             }
           } else {
             return CircularProgressIndicator();

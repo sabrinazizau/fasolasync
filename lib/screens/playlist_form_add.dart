@@ -29,7 +29,10 @@ class _PlaylistFormAddState extends State<PlaylistFormAdd> {
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: () {
+            // Navigate back to the previous screen (libraryPage)
+            Navigator.pop(context);
+          },
           icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
         ),
         title: const Text(
@@ -84,6 +87,9 @@ class _PlaylistFormAddState extends State<PlaylistFormAdd> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue[900],
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20.0),
+                    ),
                     elevation: 0,
                   ),
                   onPressed: () async {

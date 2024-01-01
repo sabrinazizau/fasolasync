@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +10,7 @@ import '../models/Song_model.dart';
 
 import '../restapi.dart';
 import '../config.dart';
+import '../screens/nav_bar.dart';
 
 class SongFormAdd extends StatefulWidget {
   const SongFormAdd({Key? key}) : super(key: key);
@@ -19,15 +22,41 @@ class SongFormAdd extends StatefulWidget {
 class _SongFormAddState extends State<SongFormAdd> {
   final title = TextEditingController();
   final artist = TextEditingController();
-  // final duration = TextEditingController();
-  // final url_song = TextEditingController();
+  bool isLoading = false;
 
   String url_song = '';
   late ValueNotifier<int> _notifier;
 
   DataService ds = DataService();
 
+  @override
+  void initState() {
+    super.initState();
+    checkAdminRole();
+  }
+
+  Future<void> checkAdminRole() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user != null) {
+      DocumentSnapshot<Map<String, dynamic>> userData = await FirebaseFirestore
+          .instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+
+      String userRole = userData['role'];
+
+      if (userRole != 'admin') {
+        Navigator.pop(context);
+      }
+    }
+  }
+
   Future<void> openFileExplorer() async {
+    setState(() {
+      isLoading = true;
+    });
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -42,13 +71,42 @@ class _SongFormAddState extends State<SongFormAdd> {
 
         setState(() {
           url_song = fileUri + file['file_name'];
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
         });
       }
     } on PlatformException catch (e) {
       if (kDebugMode) {
         print(e);
       }
+
+      setState(() {
+        isLoading = false;
+      });
     }
+  }
+
+  Future<void> showSuccessDialog() async {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success'),
+          content: const Text('Song submitted successfully!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -56,14 +114,27 @@ class _SongFormAddState extends State<SongFormAdd> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF4A55A2)),
-        ),
         title: const Text(
-          'Playlist Form Add',
+          "Song Form Add",
           style: TextStyle(color: Color(0xFF4A55A2)),
         ),
+        automaticallyImplyLeading: false,
+        actions: [
+          IconButton(
+            onPressed: () {
+              FirebaseAuth.instance.signOut();
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => NavBarDemo(user: null),
+                ),
+              );
+            },
+            icon: Icon(
+              Icons.logout,
+              color: Color(0xFF4A55A2),
+            ),
+          ),
+        ],
         backgroundColor: Colors.white,
       ),
       body: Container(
@@ -121,7 +192,14 @@ class _SongFormAddState extends State<SongFormAdd> {
                 child: Text('Choose File'),
               ),
             ),
-            if (url_song != null)
+            if (isLoading)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                child: Center(
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (url_song != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Text(
@@ -146,7 +224,12 @@ class _SongFormAddState extends State<SongFormAdd> {
                         response.map((e) => SongsModel.fromJson(e)).toList();
 
                     if (Songs.length == 1) {
-                      Navigator.pop(context, true);
+                      await showSuccessDialog();
+                      setState(() {
+                        title.text = '';
+                        artist.text = '';
+                        url_song = '';
+                      });
                     } else {
                       if (kDebugMode) {
                         print(response);

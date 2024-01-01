@@ -102,14 +102,14 @@ class libraryPageState extends State<libraryPage> {
                           children: [
                             Icon(
                               Icons.library_music,
-                              color: Colors.black,
+                              color: Color(0xFF4A55A2),
                               size: 45,
                             ),
                             const SizedBox(width: 5),
                             Text(
                               'YOUR LIBRARY',
                               style: TextStyle(
-                                color: Colors.black,
+                                color: Color(0xFF4A55A2),
                                 fontSize: screenWidth > 600 ? 35 : 25,
                                 fontFamily: 'Poppins',
                                 fontWeight: FontWeight.bold,
@@ -122,28 +122,29 @@ class libraryPageState extends State<libraryPage> {
                                 onPressed: () => Navigator.pushNamed(
                                     context, 'playlist_form_add'),
                                 icon: const Icon(Icons.add,
-                                    color: Colors.black, size: 35),
+                                    color: Color(0xFF4A55A2), size: 35),
                               ),
                           ],
                         ),
                         SizedBox(height: 5),
-                        searchField(),
-                        SizedBox(height: 15),
                         Text(
                           'Playlists',
                           style: TextStyle(
-                            color: Colors.black,
+                            color: Color(0xFF4A55A2),
+                            fontWeight: FontWeight.w600,
                             fontSize: screenWidth > 600 ? 20 : 15,
                             fontFamily: 'Poppins',
                             height: 3,
                           ),
                         ),
-                        SizedBox(height: 2),
                         Divider(
-                          color: Colors.black,
+                          color: Color(0xFF4A55A2),
                           thickness: 1.5,
                           height: 2,
                         ),
+                        SizedBox(height: 15),
+                        searchField(),
+                        SizedBox(height: 2),
                         SizedBox(height: 10),
                         isUserLoggedIn()
                             ? Expanded(
@@ -152,7 +153,8 @@ class libraryPageState extends State<libraryPage> {
                                         child: Text(
                                           'No playlists in your library',
                                           style: TextStyle(
-                                            color: Colors.black,
+                                            color: Color(0xFF4A55A2),
+                                            fontWeight: FontWeight.w600,
                                             fontSize: 16,
                                             fontFamily: 'Poppins',
                                           ),
@@ -188,7 +190,7 @@ class libraryPageState extends State<libraryPage> {
                                 child: Text(
                                   'Please log in to view your playlists',
                                   style: TextStyle(
-                                    color: Colors.black,
+                                    color: Color(0xFF4A55A2),
                                     fontSize: 16,
                                     fontFamily: 'Poppins',
                                     fontWeight:
@@ -214,8 +216,11 @@ class libraryPageState extends State<libraryPage> {
     final textScaleFactor = MediaQuery.of(context).textScaleFactor;
 
     return Card(
-      color: Colors.transparent,
+      color: Colors.white,
       child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(50),
+        ),
         width: screenWidth,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -243,14 +248,21 @@ class libraryPageState extends State<libraryPage> {
             SizedBox(width: 12),
             Expanded(
               child: Column(
-                //padding: const EdgeInsets.all(45.0),
-                crossAxisAlignment: CrossAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '$albumTitle' + ' • x songs',
+                    '$albumTitle',
                     style: TextStyle(
                       fontSize: 16 * textScaleFactor,
                       fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(height: 5),
+                  Text(
+                    'Playlist • FaSolasync',
+                    style: TextStyle(
+                      fontSize: 14 * textScaleFactor,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
