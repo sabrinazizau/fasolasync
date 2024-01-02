@@ -12,7 +12,6 @@ import 'package:tugas5/screens/list_song.dart';
 import 'package:tugas5/screens/playlist_detail.dart';
 import 'package:tugas5/screens/playlist_form_add.dart';
 import 'package:tugas5/screens/playlist_form_edit.dart';
-import 'package:tugas5/screens/playlist_list.dart';
 import 'package:tugas5/screens/register_page.dart';
 import 'package:tugas5/services/playlist_operations.dart';
 import '/screens/nav_bar.dart';
@@ -47,7 +46,6 @@ class MyApp extends StatelessWidget {
         'playlist_form_add': (context) => const PlaylistFormAdd(),
         'playlist_operations': (context) => const HomeContent(),
         'playlist_detail': (context) => const PlaylistDetail(),
-        'playlist_list': (context) => const PlaylistList(),
         'library': (context) => const libraryPage(),
         'detail_nav': (context) => const DetailPlayerScreen(),
         'list_song': (context) => ListSong(),
