@@ -155,7 +155,7 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
                         color: Color(0xFF4A55A2),
                       ),
                       onPressed: () {
-                        playSong(index);
+                        handlePlayPause(index, context);
                       },
                     ),
                   ),
@@ -176,6 +176,37 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
         }
       },
     );
+  }
+
+  void handlePlayPause(int index, BuildContext context) async {
+    if (audioPlayer.playing) {
+      await audioPlayer.pause(); // Pause the audio
+      setState(() {
+        isPlaying = false;
+        currentlyPlayingIndex = -1;
+      });
+    } else {
+      // If the audio is not playing, start playing the selected song
+      playSong(index);
+
+      // Show bottom sheet with AudioControl when play icon is clicked
+      showBottomSheet(
+        context: context,
+        builder: (BuildContext context) {
+          return AudioControl(
+            audioPlayer: audioPlayer,
+            songs: songs,
+            currentlyPlayingIndex: currentlyPlayingIndex,
+            playNext: playNext,
+            playPrevious: playPrevious,
+          );
+        },
+      );
+    }
+
+    setState(() {
+      currentlyPlayingIndex = index;
+    });
   }
 
   void playNext() {
@@ -229,18 +260,18 @@ class PlaylistSongState extends State<PlaylistSongsWidget> {
         });
       }
     }
-    showBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return AudioControl(
-          audioPlayer: audioPlayer,
-          songs: songs,
-          currentlyPlayingIndex: currentlyPlayingIndex,
-          playNext: playNext,
-          playPrevious: playPrevious,
-        );
-      },
-    );
+    // showBottomSheet(
+    //   context: context,
+    //   builder: (BuildContext context) {
+    //     return AudioControls(
+    //       audioPlayer: audioPlayer,
+    //       songs: songs,
+    //       currentlyPlayingIndex: currentlyPlayingIndex,
+    //       playNext: playNext,
+    //       playPrevious: playPrevious,
+    //     );
+    //   },
+    // );
     setState(() {
       currentlyPlayingIndex = index;
     });
@@ -275,128 +306,134 @@ class AudioControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey[200],
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+      constraints:
+          BoxConstraints(maxHeight: 200), // Adjust the maxHeight as needed
+      child: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              CircleAvatar(
-                backgroundColor: Colors.blue[900],
-                radius: 25,
-                child: Icon(
-                  Icons.music_note,
-                  color: Colors.white,
-                  size: 30,
-                ),
-              ),
-              SizedBox(width: 16),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  Text(
-                    currentlyPlayingIndex != -1
-                        ? songs[currentlyPlayingIndex].title
-                        : '',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  CircleAvatar(
+                    backgroundColor: Colors.blue[900],
+                    radius: 25,
+                    child: Icon(
+                      Icons.music_note,
+                      color: Colors.white,
+                      size: 30,
+                    ),
                   ),
-                  SizedBox(height: 4),
-                  Text(
-                    currentlyPlayingIndex != -1
-                        ? songs[currentlyPlayingIndex].artist
-                        : '',
-                    style: TextStyle(color: Colors.grey),
+                  SizedBox(width: 16),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        currentlyPlayingIndex != -1
+                            ? songs[currentlyPlayingIndex].title
+                            : '',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        currentlyPlayingIndex != -1
+                            ? songs[currentlyPlayingIndex].artist
+                            : '',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              StreamBuilder<Duration?>(
+                stream: audioPlayer.durationStream,
+                builder: (context, snapshot) {
+                  final duration = snapshot.data ?? Duration.zero;
+                  return StreamBuilder<Duration>(
+                    stream: audioPlayer.positionStream,
+                    builder: (context, snapshot) {
+                      var position = snapshot.data ?? Duration.zero;
+                      if (position > duration) {
+                        position = duration;
+                      }
+                      sliderValue = duration.inMilliseconds > 0
+                          ? position.inMilliseconds / duration.inMilliseconds
+                          : 0.0;
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Slider(
+                            value: sliderValue,
+                            onChanged: (value) {
+                              seekTo(value);
+                            },
+                            min: 0.0,
+                            max: 1.0,
+                          ),
+                          Row(
+                            children: [
+                              Text(
+                                formatDuration(position),
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                '/',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                formatDuration(duration),
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
+              Row(
+                children: [
+                  IconButton(
+                    icon: Icon(Icons.skip_previous),
+                    onPressed: () {
+                      playPrevious();
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      audioPlayer.playing ? Icons.pause : Icons.play_arrow,
+                    ),
+                    onPressed: () {
+                      if (audioPlayer.playing) {
+                        audioPlayer.pause();
+                      } else {
+                        audioPlayer.play();
+                      }
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.skip_next),
+                    onPressed: () {
+                      playNext();
+                    },
                   ),
                 ],
               ),
             ],
           ),
-          StreamBuilder<Duration?>(
-            stream: audioPlayer.durationStream,
-            builder: (context, snapshot) {
-              final duration = snapshot.data ?? Duration.zero;
-              return StreamBuilder<Duration>(
-                stream: audioPlayer.positionStream,
-                builder: (context, snapshot) {
-                  var position = snapshot.data ?? Duration.zero;
-                  if (position > duration) {
-                    position = duration;
-                  }
-                  sliderValue = duration.inMilliseconds > 0
-                      ? position.inMilliseconds / duration.inMilliseconds
-                      : 0.0;
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Slider(
-                        value: sliderValue,
-                        onChanged: (value) {
-                          seekTo(value);
-                        },
-                        min: 0.0,
-                        max: 1.0,
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            formatDuration(position),
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            '/',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            formatDuration(duration),
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-          ),
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(Icons.skip_previous),
-                onPressed: () {
-                  playPrevious();
-                },
-              ),
-              IconButton(
-                icon: Icon(
-                  audioPlayer.playing ? Icons.pause : Icons.play_arrow,
-                ),
-                onPressed: () {
-                  if (audioPlayer.playing) {
-                    audioPlayer.pause();
-                  } else {
-                    audioPlayer.play();
-                  }
-                },
-              ),
-              IconButton(
-                icon: Icon(Icons.skip_next),
-                onPressed: () {
-                  playNext();
-                },
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
